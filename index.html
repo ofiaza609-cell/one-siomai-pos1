@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FF6B35">
+    <title>One SIOMAi POS</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+        body {background:#f5f5f5;padding-bottom:80px}
+ .header {background:#FF6B35;color:white;padding:15px;text-align:center;font-size:20px;font-weight:700;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+ .tabs {display:flex;background:white;position:sticky;top:54px;z-index:99;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+ .tab {flex:1;padding:12px;text-align:center;font-weight:600;color:#666;border-bottom:3px solid transparent;cursor:pointer}
+ .tab.active {color:#FF6B35;border-bottom-color:#FF6B35}
+ .content {padding:15px}
+ .page {display:none}
+ .page.active {display:block}
+ .category-filter {display:flex;gap:8px;overflow-x:auto;padding:10px 0;margin-bottom:15px}
+ .category-btn {background:white;border:2px solid #ddd;color:#666;padding:8px 15px;border-radius:20px;font-weight:600;white-space:nowrap;cursor:pointer}
+ .category-btn.active {background:#FF6B35;border-color:#FF6B35;color:white}
+ .product-grid {display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:15px}
+ .product {background:white;border-radius:12px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08);text-align:center}
+ .product-name {font-weight:700;font-size:15px;margin-bottom:3px;color:#333}
+ .product-cat {font-size:11px;color:#999;margin-bottom:8px}
+ .price-box {display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:8px}
+ .price-label {font-size:16px;font-weight:700;color:#FF6B35}
+ .price-input-card {width:70px;padding:5px;border-radius:6px;border:2px solid #FF6B35;text-align:center;font-size:16px;font-weight:700;color:#FF6B35}
+ .product-stock {font-size:12px;color:#666;margin-bottom:10px}
+ .product-stock.low {color:#e74c3c;font-weight:600}
+ .product-qty-controls {display:flex;gap:5px;align-items:center;justify-content:center;margin-bottom:10px}
+ .qty-btn-small {background:#FF6B35;color:white;border:none;width:28px;height:28px;border-radius:6px;font-weight:700;font-size:16px;cursor:pointer}
+ .qty-input-small {width:45px;padding:5px;border-radius:6px;border:2px solid #ddd;text-align:center;font-size:14px;font-weight:600}
+ .btn-add {background:#FF6B35;color:white;border:none;padding:10px;width:100%;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
+ .btn-add:disabled {background:#ccc;cursor:not-allowed}
+ .cart {background:white;border-radius:12px;padding:15px;margin-top:15px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+ .cart-title {font-weight:700;font-size:18px;margin-bottom:10px;color:#333}
+ .cart-item {padding:12px 0;border-bottom:1px solid #eee}
+ .cart-item-top {display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+ .cart-item-name {font-weight:600;font-size:15px}
+ .cart-item-remove {color:#e74c3c;font-size:20px;cursor:pointer;font-weight:700}
+ .cart-item-info {display:flex;justify-content:space-between;font-size:14px;color:#666}
+ .cart-total {display:flex;justify-content:space-between;font-weight:700;font-size:20px;margin-top:10px;color:#FF6B35}
+ .cash-section {background:#f8f9fa;border-radius:8px;padding:12px;margin-top:12px}
+ .cash-row {display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+ .cash-input {width:100px;padding:8px;border-radius:8px;border:2px solid #27ae60;text-align:right;font-size:16px;font-weight:700}
+ .change-row {display:flex;justify-content:space-between;font-weight:700;font-size:18px;color:#27ae60;margin-top:8px;padding-top:8px;border-top:2px dashed #ddd}
+ .btn-checkout {background:#27ae60;color:white;border:none;padding:15px;width:100%;border-radius:8px;font-weight:700;font-size:16px;margin-top:10px;cursor:pointer}
+ .btn-checkout:disabled {background:#ccc}
+ .action-btns {display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:15px 0}
+ .action-btn {background:white;border:2px solid #FF6B35;color:#FF6B35;padding:12px;border-radius:8px;font-weight:600;cursor:pointer}
+ .summary-card {background:white;border-radius:12px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+ .summary-row {display:flex;justify-content:space-between;padding:8px 0;font-size:15px}
+ .summary-row.total {font-weight:700;font-size:18px;border-top:2px solid #eee;margin-top:8px;padding-top:12px;color:#27ae60}
+ .modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+ .modal-content {background:white;border-radius:12px;padding:20px;width:90%;max-width:400px}
+ .modal input {width:100%;padding:12px;margin:10px 0;border-radius:8px;border:2px solid #ddd;font-size:15px}
+ .modal-btns {display:flex;gap:10px;margin-top:15px}
+ .modal-btns button {flex:1;padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+ .btn-primary {background:#FF6B35;color:white}
+ .btn-secondary {background:#999;color:white}
+ .inventory-item {background:white;border-radius:12px;padding:15px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.08)}
+ .inventory-top {display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+ .stock-controls {display:flex;gap:8px;align-items:center}
+ .stock-controls input {width:80px;padding:8px;border-radius:8px;border:2px solid #ddd;text-align:center;font-size:15px;font-weight:600}
+ .stock-btn {background:#27ae60;color:white;border:none;padding:8px 15px;border-radius:8px;font-weight:600;cursor:pointer}
+ .expense-item {background:white;border-radius:12px;padding:12px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;justify-content:space-between}
+ .receipt {background:white;padding:20px;font-family:monospace;font-size:13px;max-width:300px;margin:0 auto}
+ .receipt-center {text-align:center}
+ .receipt-line {border-top:1px dashed #000;margin:8px 0}
+ .cat-header {background:#FF6B35;color:white;padding:8px 15px;border-radius:8px;font-weight:700;margin:15px 0 10px 0;font-size:14px}
+    </style>
+</head>
+<body>
+    <div class="header">🥟 One SIOMAi POS</div>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('pos')">POS</div>
+        <div class="tab" onclick="switchTab('inventory')">Inventory</div>
+        <div class="tab" onclick="switchTab('summary')">Summary</div>
+    </div>
+    <div class="content">
+        <div id="pos" class="page active">
+            <div class="category-filter" id="categoryFilter">
+                <button class="category-btn active" onclick="filterCategory('all')">All</button>
+                <button class="category-btn" onclick="filterCategory('65s')">65's</button>
+                <button class="category-btn" onclick="filterCategory('30s')">30's</button>
+                <button class="category-btn" onclick="filterCategory('big')">BIG SIOMAI</button>
+                <button class="category-btn" onclick="filterCategory('dumplings')">DUMPLINGS</button>
+                <button class="category-btn" onclick="filterCategory('siopao')">SIOPAO</button>
+                <button class="category-btn" onclick="filterCategory('sauce')">SAUCE</button>
+            </div>
+            <div class="product-grid" id="productGrid"></div>
+            <div class="cart">
+                <div class="cart-title">Cart</div>
+                <div id="cartItems"></div>
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotal">₱0</span>
+                </div>
+                <div class="cash-section" id="cashSection" style="display:none">
+                    <div class="cash-row">
+                        <span style="font-weight:600">Cash:</span>
+                        <div style="display:flex;align-items:center;gap:5px">
+                            <span>₱</span>
+                            <input type="number" class="cash-input" id="cashInput" placeholder="0" oninput="calculateChange()">
+                        </div>
+                    </div>
+                    <div class="change-row">
+                        <span>Change:</span>
+                        <span id="changeAmount">₱0</span>
+                    </div>
+                </div>
+                <button class="btn-checkout" id="checkoutBtn" onclick="checkout()" disabled>Checkout</button>
+            </div>
+            <div class="action-btns">
+                <button class="action-btn" onclick="openModal('addExpenseModal')">+ Add Expense</button>
+            </div>
+        </div>
+        <div id="inventory" class="page">
+            <div id="inventoryList"></div>
+        </div>
+        <div id="summary" class="page">
+            <div class="summary-card">
+                <div class="summary-row"><span>Total Sales:</span><span id="totalSales">₱0</span></div>
+                <div class="summary-row"><span>Total Expenses:</span><span id="totalExpenses">₱0</span></div>
+                <div class="summary-row"><span>Product Cost:</span><span id="productCost">₱0</span></div>
+                <div class="summary-row total"><span>Net Profit:</span><span id="netProfit">₱0</span></div>
+            </div>
+            <div class="summary-card">
+                <div style="font-weight:700;margin-bottom:10px">Recent Expenses</div>
+                <div id="expenseList"></div>
+            </div>
+            <button class="action-btn" style="width:100%;background:#e74c3c;border-color:#e74c3c;color:white;margin-top:10px" onclick="endDay()">End Day & Clear Sales</button>
+        </div>
+    </div>
+    <div id="addExpenseModal" class="modal">
+        <div class="modal-content">
+            <h3>Add Expense</h3>
+            <input type="text" id="expenseName" placeholder="Expense name">
+            <input type="number" id="expenseAmount" placeholder="Amount">
+            <div class="modal-btns">
+                <button class="btn-primary" onclick="addExpense()">Add Expense</button>
+                <button class="btn-secondary" onclick="closeModal('addExpenseModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <div id="receiptModal" class="modal">
+        <div class="modal-content">
+            <div class="receipt" id="receiptContent"></div>
+            <div class="modal-btns">
+                <button class="btn-primary" onclick="closeModal('receiptModal')">Close</button>
+            </div>
+        </div>
+    </div>
+<script>
+let products = [
+    {id: 1, name: 'Pork 65\'s', price: 150, stock: 0, cost: 100, category: '65s'},
+    {id: 2, name: 'Chicken 65\'s', price: 150, stock: 0, cost: 100, category: '65s'},
+    {id: 3, name: 'Beef 65\'s', price: 150, stock: 0, cost: 100, category: '65s'},
+    {id: 4, name: 'Shrimp 65\'s', price: 150, stock: 0, cost: 100, category: '65s'},
+    {id: 5, name: 'Pork 30\'s', price: 80, stock: 0, cost: 50, category: '30s'},
+    {id: 6, name: 'Chicken 30\'s', price: 80, stock: 0, cost: 50, category: '30s'},
+    {id: 7, name: 'Beef 30\'s', price: 80, stock: 0, cost: 50, category: '30s'},
+    {id: 8, name: 'Shrimp 30\'s', price: 80, stock: 0, cost: 50, category: '30s'},
+    {id: 9, name: 'Japanese 30\'s', price: 120, stock: 0, cost: 80, category: '30s'},
+    {id: 10, name: 'Pork Big Siomai', price: 120, stock: 0, cost: 80, category: 'big'},
+    {id: 11, name: 'Beef Big Siomai', price: 120, stock: 0, cost: 80, category: 'big'},
+    {id: 12, name: 'Japanese Big Siomai', price: 150, stock: 0, cost: 100, category: 'big'},
+    {id: 13, name: 'Gyoza', price: 110, stock: 0, cost: 70, category: 'dumplings'},
+    {id: 14, name: 'Sharksfin', price: 110, stock: 0, cost: 70, category: 'dumplings'},
+    {id: 15, name: 'Hakaw', price: 280, stock: 0, cost: 180, category: 'dumplings'},
+    {id: 16, name: 'Jumbo Asado', price: 200, stock: 0, cost: 130, category: 'siopao'},
+    {id: 17, name: 'Jumbo Bola-Bola', price: 200, stock: 0, cost: 130, category: 'siopao'},
+    {id: 18, name: 'Mini Asado', price: 200, stock: 0, cost: 130, category: 'siopao'},
+    {id: 19, name: 'Mini Bola-Bola', price: 200, stock: 0, cost: 130, category: 'siopao'},
+    {id: 20, name: 'Chili Garlic', price: 75, stock: 0, cost: 40, category: 'sauce'},
+    {id: 21, name: 'Siopao Sauce', price: 0, stock: 0, cost: 0, category: 'sauce'},
+    {id: 22, name: 'Steam Rice', price: 15, stock: 0, cost: 8, category: 'extras'},
+    {id: 23, name: 'Iced Tea', price: 15, stock: 0, cost: 8, category: 'extras'}
+];
+let cart = [];
+let sales = JSON.parse(localStorage.getItem('sales') || '[]');
+let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+let savedProducts = JSON.parse(localStorage.getItem('products'));
+let currentCategory = 'all';
+let productQty = {};
+let productPrice = {};
+if(savedProducts) products = savedProducts;
+renderProducts();
+renderCart();
+renderInventory();
+renderSummary();
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+    if(tab === 'inventory') renderInventory();
+    if(tab === 'summary') renderSummary();
+}
+function filterCategory(cat) {
+    currentCategory = cat;
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderProducts();
+}
+function renderProducts() {
+    const grid = document.getElementById('productGrid');
+    const filtered = currentCategory === 'all'? products : products.filter(p => p.category === currentCategory);
+    grid.innerHTML = filtered.map(p => {
+        if(!productQty[p.id]) productQty[p.id] = 1;
+        if(productPrice[p.id] === undefined) productPrice[p.id] = p.price;
+        return `
+        <div class="product">
+            <div class="product-name">${p.name}</div>
+            <div class="product-cat">${p.category.toUpperCase()}</div>
+            <div class="price-box">
+                <span class="price-label">₱</span>
+                <input type="number" class="price-input-card" id="price${p.id}" value="${productPrice[p.id]}" min="0" onchange="setProductPrice(${p.id}, this.value)">
+            </div>
+            <div class="product-stock ${p.stock < 10? 'low' : ''}">Stock: ${p.stock}</div>
+            <div class="product-qty-controls">
+                <button class="qty-btn-small" onclick="changeProductQty(${p.id}, -1)">-</button>
+                <input type="number" class="qty-input-small" id="qty${p.id}" value="${productQty[p.id]}" min="1" max="${p.stock}" onchange="setProductQty(${p.id}, this.value)">
+                <button class="qty-btn-small" onclick="changeProductQty(${p.id}, 1)">+</button>
+            </div>
+            <button class="btn-add" onclick="addToCartWithQty(${p.id})" ${p.stock === 0? 'disabled' : ''}>
+                ${p.stock === 0? 'Out of Stock' : '+ Add'}
+            </button>
+        </div>
+    `}).join('');
+}
+function changeProductQty(id, delta) {
+    const product = products.find(p => p.id === id);
+    productQty[id] = Math.max(1, Math.min(product.stock || 999, (productQty[id] || 1) + delta));
+    document.getElementById(`qty${id}`).value = productQty[id];
+}
+function setProductQty(id, val) {
+    const product = products.find(p => p.id === id);
+    productQty[id] = Math.max(1, Math.min(product.stock || 999, parseInt(val) || 1));
+    document.getElementById(`qty${id}`).value = productQty[id];
+}
+function setProductPrice(id, val) {
+    productPrice[id] = Math.max(0, parseFloat(val) || 0);
+}
+function addToCartWithQty(id) {
+    const product = products.find(p => p.id === id);
+    const qty = productQty[id] || 1;
+    const customPrice = productPrice[id]!== undefined? productPrice[id] : product.price;
+    if(product.stock === 0 || qty > product.stock) return alert('Not enough stock!');
+    const item = cart.find(c => c.id === id && c.price === customPrice);
+    if(item) {
+        if(item.qty + qty <= product.stock) {
+            item.qty += qty;
+        } else {
+            return alert('Not enough stock!');
+        }
+    } else {
+        cart.push({id: product.id, name: product.name, price: customPrice, cost: product.cost, stock: product.stock, category: product.category, qty: qty});
+    }
+    productQty[id] = 1;
+    productPrice[id] = product.price;
+    renderProducts();
+    renderCart();
+}
+function renderCart() {
+    const cartDiv = document.getElementById('cartItems');
+    if(cart.length === 0) {
+        cartDiv.innerHTML = '<div style="text-align:center;color:#999;padding:20px">Cart is empty</div>';
+        document.getElementById('checkoutBtn').disabled = true;
+        document.getElementById('cashSection').style.display = 'none';
+    } else {
+        cartDiv.innerHTML = cart.map((item, idx) => `
+            <div class="cart-item">
+                <div class="cart-item-top">
+                    <span class="cart-item-name">${item.name}</span>
+                    <span class="cart-item-remove" onclick="removeFromCart(${idx})">×</span>
+                </div>
+                <div class="cart-item-info">
+                    <span>Qty: ${item.qty} × ₱${item.price}</span>
+                    <span style="font-weight:700;color:#FF6B35">₱${item.price * item.qty}</span>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('cashSection').style.display = 'block';
+    }
+    updateTotal();
+    document.getElementById('cashInput').value = '';
+    document.getElementById('changeAmount').textContent = '₱0';
+}
+function removeFromCart(idx) {
+    cart.splice(idx, 1);
+    renderCart();
+}
+function updateTotal() {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    document.getElementById('cartTotal').textContent = `₱${total}`;
+    calculateChange();
+}
+function calculateChange() {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const cash = parseFloat(document.getElementById('cashInput').value) || 0;
+    const change = cash - total;
+    document.getElementById('changeAmount').textContent = `₱${change >= 0? change : 0}`;
+    document.getElementById('checkoutBtn').disabled = cash < total || cart.length === 0;
+}
+function checkout() {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const cash = parseFloat(document.getElementById('cashInput').value) || 0;
+    if(cash < total) return alert('Insufficient cash!');
+    const change = cash - total;
+    const cost = cart.reduce((sum, item) => sum + (item.cost * item.qty), 0);
+    cart.forEach(item => {
+        const product = products.find(p => p.id === item.id);
+        product.stock -= item.qty;
+    });
+    sales.push({date: new Date().toISOString(), items: [...cart], total: total, cost: cost, cash: cash, change: change});
+    saveData();
+    showReceipt(total, cash, change);
+    cart = [];
+    renderProducts();
+    renderCart();
+    renderInventory();
+}
+function showReceipt(total, cash, change) {
+    const receipt = document.getElementById('receiptContent');
+    const now = new Date();
+    const lastSale = sales[sales.length-1];
+    receipt.innerHTML = `
+        <div class="receipt-center">
+            <div style="font-weight:700;font-size:16px">ONE SIOMAI</div>
+            <div>Valenzuela City</div>
+            <div class="receipt-line"></div>
+            <div>${now.toLocaleDateString()} ${now.toLocaleTimeString()}</div>
+            <div class="receipt-line"></div>
+        </div>
+        ${lastSale.items.map(item => `
+            <div style="display:flex;justify-content:space-between">
+                <span>${item.name} x${item.qty}</span>
+                <span>₱${item.price * item.qty}</span>
+            </div>
+        `).join('')}
+        <div class="receipt-line"></div>
+        <div style="display:flex;justify-content:space-between;font-weight:700">
+            <span>TOTAL:</span>
+            <span>₱${total}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+            <span>CASH:</span>
+            <span>₱${cash}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-weight:700">
+            <span>CHANGE:</span>
+            <span>₱${change}</span>
+        </div>
+        <div class="receipt-line"></div>
+        <div class="receipt-center">Thank you!</div>
+    `;
+    openModal('receiptModal');
+}
+function renderInventory() {
+    const list = document.getElementById('inventoryList');
+    const categories = ['65s', '30s', 'big', 'dumplings', 'siopao', 'sauce', 'extras'];
+    const catNames = {'65s': '65\'s Pack','30s': '30\'s Pack','big': 'BIG SIOMAI','dumplings': 'DUMPLINGS','siopao': 'SIOPAO','sauce': 'SAUCE','extras': 'EXTRAS'};
+    list.innerHTML = categories.map(cat => {
+        const catProducts = products.filter(p => p.category === cat);
+        if(catProducts.length === 0) return '';
+        return `
+            <div class="cat-header">${catNames[cat]}</div>
+            ${catProducts.map(p => `
+                <div class="inventory-item">
+                    <div class="inventory-top">
+                        <div>
+                            <div style="font-weight:700;font-size:16px">${p.name}</div>
+                            <div style="font-size:13px;color:#666">₱${p.price} | Cost: ₱${p.cost}</div>
+                        </div>
+                        <div style="font-weight:700;font-size:20px;color:${p.stock < 10? '#e74c3c' : '#27ae60'}">${p.stock}</div>
+                    </div>
+                    <div class="stock-controls">
+                        <input type="number" id="addQty${p.id}" placeholder="Qty" min="1">
+                        <button class="stock-btn" onclick="quickAddStock(${p.id})">+ Add Stock</button>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    }).join('');
+}
+function quickAddStock(id) {
+    const input = document.getElementById(`addQty${id}`);
+    const qty = parseInt(input.value);
+    if(!qty || qty <= 0) return alert('Enter valid quantity');
+    const product = products.find(p => p.id === id);
+    product.stock += qty;
+    saveData();
+    renderProducts();
+    renderInventory();
+    input.value = '';
+}
+function addExpense() {
+    const name = document.getElementById('expenseName').value;
+    const amount = parseFloat(document.getElementById('expenseAmount').value);
+    if(!name ||!amount) return alert('Enter name and amount');
+    expenses.push({name, amount, date: new Date().toISOString()});
+    saveData();
+    renderSummary();
+    closeModal('addExpenseModal');
+    document.getElementById('expenseName').value = '';
+    document.getElementById('expenseAmount').value = '';
+}
+function renderSummary() {
+    const totalSales = sales.reduce((sum, s) => sum + s.total, 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const productCost = sales.reduce((sum, s) => sum + s.cost, 0);
+    const netProfit = totalSales - totalExpenses - productCost;
+    document.getElementById('totalSales').textContent = `₱${totalSales}`;
+    document.getElementById('totalExpenses').textContent = `₱${totalExpenses}`;
+    document.getElementById('productCost').textContent = `₱${productCost}`;
+    document.getElementById('netProfit').textContent = `₱${netProfit}`;
+    const expenseList = document.getElementById('expenseList');
+    if(expenses.length === 0) {
+        expenseList.innerHTML = '<div style="text-align:center;color:#999;padding:10px">No expenses yet</div>';
+    } else {
+        expenseList.innerHTML = expenses.slice(-5).reverse().map(e => `
+            <div class="expense-item">
+                <span>${e.name}</span>
+                <span style="font-weight:600;color:#e74c3c">₱${e.amount}</span>
+            </div>
+        `).join('');
+    }
+}
+function endDay() {
+    if(!confirm('End day and clear all sales? This cannot be undone!')) return;
+    sales = [];
+    expenses = [];
+    saveData();
+    renderSummary();
+    alert('Day ended! Sales and expenses cleared.');
+}
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'flex';
+}
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+function saveData() {
+    localStorage.setItem('products', JSON.stringify(products));
+    localStorage.setItem('sales', JSON.stringify(sales));
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+}
+if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
