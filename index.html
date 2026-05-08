@@ -10,7 +10,7 @@
     body {background:#f5f5f5;padding-bottom:70px}
     .header {background:#FF6B35;color:white;padding:15px;text-align:center;font-size:18px;font-weight:bold;position:sticky;top:0;z-index:100}
     .main-tabs {display:flex;background:white;border-bottom:2px solid #eee;position:sticky;top:52px;z-index:99}
-    .main-tab {flex:1;padding:14px;text-align:center;cursor:pointer;font-size:15px;font-weight:600;color:#666;border-bottom:3px solid transparent}
+    .main-tab {flex:1;padding:14px;text-align:center;cursor:pointer;font-size:14px;font-weight:600;color:#666;border-bottom:3px solid transparent}
     .main-tab.active {color:#FF6B35;border-bottom-color:#FF6B35}
     .content {padding:10px}
     .section {display:none}
@@ -24,7 +24,9 @@
     .product-card .cat {font-size:11px;color:#999;margin-bottom:8px}
     .product-card .price {font-size:20px;font-weight:bold;color:#FF6B35;margin:8px 0}
     .product-card .stock {font-size:12px;color:#666;margin-bottom:10px}
-    .btn-add {width:100%;background:#FF6B35;color:white;border:none;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:13px}
+    .add-controls {display:flex;gap:5px;align-items:center}
+    .qty-input {width:50px;padding:8px;text-align:center;border:2px solid #ddd;border-radius:8px;font-size:14px;font-weight:bold}
+    .btn-add {flex:1;background:#FF6B35;color:white;border:none;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:13px}
     .btn-add:active {background:#e55a28}
     .btn-add:disabled {background:#ccc;color:#888}
     .cart {position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #FF6B35;padding:12px;max-height:45vh;overflow-y:auto;z-index:200}
@@ -50,6 +52,9 @@
     .sales-box {background:white;padding:15px;border-radius:8px;margin-bottom:15px}
     .sales-row {display:flex;justify-content:space-between;padding:8px 0;font-size:15px}
     .sales-total {font-size:24px;font-weight:bold;color:#FF6B35}
+    .expense-item {background:white;padding:12px;margin:8px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+    .expense-input {width:100%;padding:10px;border:2px solid #ddd;border-radius:6px;font-size:14px;margin:6px 0}
+    .btn-expense {width:100%;background:#dc3545;color:white;border:none;padding:12px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:8px}
     .hidden {display:none}
     .label {font-size:12px;color:#666;margin-right:5px}
     .bottom-actions {position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);display:flex;padding:8px;gap:8px;z-index:300}
@@ -68,6 +73,7 @@
     <div class="main-tab active" onclick="showMainTab('pos',this)">POS</div>
     <div class="main-tab" onclick="showMainTab('inventory',this)">Inventory</div>
     <div class="main-tab" onclick="showMainTab('summary',this)">Summary</div>
+    <div class="main-tab" onclick="showMainTab('expenses',this)">Expenses</div>
   </div>
 
   <div class="content">
@@ -86,12 +92,23 @@
 
     <div id="inventory" class="section">
       <h3 style="margin-bottom:10px">📦 Daily Production & Stock Update</h3>
+      <div class="filter-tabs">
+        <div class="filter-tab active" onclick="filterInventory('all',this)">All</div>
+        <div class="filter-tab" onclick="filterInventory('65',this)">65's</div>
+        <div class="filter-tab" onclick="filterInventory('30',this)">30's</div>
+        <div class="filter-tab" onclick="filterInventory('big',this)">BIG SIOMAI</div>
+        <div class="filter-tab" onclick="filterInventory('dumpling',this)">DUMPLINGS</div>
+        <div class="filter-tab" onclick="filterInventory('siop',this)">SIOPAO</div>
+        <div class="filter-tab" onclick="filterInventory('extras',this)">EXTRAS</div>
+      </div>
       <div id="stockList"></div>
     </div>
 
     <div id="summary" class="section">
       <div class="sales-box">
         <div class="sales-row"><span>Total Sales:</span><span class="sales-total">₱<span id="totalSales">0</span></span></div>
+        <div class="sales-row"><span>Total Expenses:</span><span style="color:#dc3545;font-weight:bold">₱<span id="totalExpenses">0</span></span></div>
+        <div class="sales-row"><span>Net Profit:</span><span style="color:#28a745;font-weight:bold">₱<span id="netProfit">0</span></span></div>
         <div class="sales-row"><span>Items Sold:</span><span id="itemsSold">0 pcs</span></div>
         <div class="sales-row"><span>Transactions:</span><span id="totalTrans">0</span></div>
       </div>
@@ -99,6 +116,15 @@
         <h3 style="margin-bottom:10px">Today's Transactions</h3>
         <div id="transList"></div>
       </div>
+    </div>
+
+    <div id="expenses" class="section">
+      <h3 style="margin-bottom:10px">💸 Add Expenses</h3>
+      <input type="text" id="expenseDesc" class="expense-input" placeholder="Expense description (ex: Gas, Ingredients)">
+      <input type="number" id="expenseAmount" class="expense-input" placeholder="Amount">
+      <button class="btn-expense" onclick="addExpense()">+ Add Expense</button>
+      <h3 style="margin:15px 0 10px 0">Today's Expenses</h3>
+      <div id="expenseList"></div>
     </div>
   </div>
 
@@ -151,22 +177,24 @@
     
     let cart = [];
     let sales = JSON.parse(localStorage.getItem('sales') || '[]');
+    let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
     let currentFilter = 'all';
+    let currentInvFilter = 'all';
     let lastTransaction = null;
 
     function saveData(){
       localStorage.setItem('products',JSON.stringify(products));
       localStorage.setItem('sales',JSON.stringify(sales));
+      localStorage.setItem('expenses',JSON.stringify(expenses));
     }
 
     function loadData(){
       let savedProducts = localStorage.getItem('products');
-      if(savedProducts) {
-        products = JSON.parse(savedProducts);
-      }
+      if(savedProducts) products = JSON.parse(savedProducts);
       renderProducts();
       renderStock();
       updateSales();
+      renderExpenses();
     }
 
     function showMainTab(tab,el){
@@ -179,9 +207,16 @@
 
     function filterProducts(cat,el){
       currentFilter = cat;
-      document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('#pos .filter-tab').forEach(t=>t.classList.remove('active'));
       el.classList.add('active');
       renderProducts();
+    }
+
+    function filterInventory(cat,el){
+      currentInvFilter = cat;
+      document.querySelectorAll('#inventory .filter-tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      renderStock();
     }
 
     function renderProducts(){
@@ -192,15 +227,19 @@
           <div class="cat">${p.cat.toUpperCase()}S</div>
           <div class="price">₱${p.price}</div>
           <div class="stock">Stock: ${p.stock}</div>
-          <button class="btn-add" onclick="addToCart(${p.id})" ${p.stock<=0?'disabled':''}>
-            ${p.stock<=0?'Out of Stock':'+ Add'}
-          </button>
+          <div class="add-controls">
+            <input type="number" class="qty-input" id="qty-${p.id}" value="1" min="1" max="${p.stock}">
+            <button class="btn-add" onclick="addToCartQty(${p.id})" ${p.stock<=0?'disabled':''}>
+              ${p.stock<=0?'Out of Stock':'+ Add'}
+            </button>
+          </div>
         </div>
       `).join('');
     }
 
     function renderStock(){
-      document.getElementById('stockList').innerHTML = products.map(p=>`
+      let filtered = currentInvFilter==='all' ? products : products.filter(p=>p.cat===currentInvFilter);
+      document.getElementById('stockList').innerHTML = filtered.map(p=>`
         <div class="stock-item">
           <div class="stock-header">
             <h4>${p.name}</h4>
@@ -242,12 +281,22 @@
       alert(`Added ${qty} pcs to ${p.name}! New Stock: ${p.stock}`);
     }
 
-    function addToCart(id){
+    function addToCartQty(id){
+      let qtyInput = document.getElementById('qty-'+id);
+      let qty = parseInt(qtyInput.value)||1;
       let p = products.find(x=>x.id===id);
       if(p.stock<=0){alert('Out of stock!');return}
+      if(qty>p.stock){alert(`Only ${p.stock} pcs available!`);qtyInput.value=p.stock;return}
+      
       let item = cart.find(x=>x.id===id);
-      if(item){item.qty++}else{cart.push({...p,qty:1})}
+      if(item){
+        if(item.qty+qty>p.stock){alert(`Only ${p.stock} pcs total available!`);return}
+        item.qty+=qty;
+      }else{
+        cart.push({...p,qty:qty});
+      }
       renderCart();
+      qtyInput.value=1;
     }
 
     function removeFromCart(id){
@@ -341,9 +390,12 @@
     }
 
     function updateSales(){
-      let total = sales.reduce((sum,t)=>sum+t.total,0);
+      let totalSales = sales.reduce((sum,t)=>sum+t.total,0);
+      let totalExp = expenses.reduce((sum,e)=>sum+e.amount,0);
       let items = sales.reduce((sum,t)=>sum+t.items.reduce((s,i)=>s+i.qty,0),0);
-      document.getElementById('totalSales').textContent = total;
+      document.getElementById('totalSales').textContent = totalSales;
+      document.getElementById('totalExpenses').textContent = totalExp;
+      document.getElementById('netProfit').textContent = totalSales - totalExp;
       document.getElementById('itemsSold').textContent = items + ' pcs';
       document.getElementById('totalTrans').textContent = sales.length;
       
@@ -353,6 +405,37 @@
             <span>${t.date}</span><span>₱${t.total}</span>
           </div>
           <div style="color:#666;margin-top:5px">${t.items.map(i=>i.name+' x'+i.qty).join(', ')}</div>
+        </div>
+      `).join('');
+    }
+
+    function addExpense(){
+      let desc = document.getElementById('expenseDesc').value.trim();
+      let amount = parseFloat(document.getElementById('expenseAmount').value)||0;
+      if(!desc || amount<=0){alert('Enter valid description and amount!');return}
+      
+      expenses.push({
+        id:Date.now(),
+        desc:desc,
+        amount:amount,
+        date:new Date().toLocaleString()
+      });
+      saveData();
+      renderExpenses();
+      updateSales();
+      document.getElementById('expenseDesc').value='';
+      document.getElementById('expenseAmount').value='';
+      alert('Expense added!');
+    }
+
+    function renderExpenses(){
+      document.getElementById('expenseList').innerHTML = expenses.slice(-10).reverse().map(e=>`
+        <div class="expense-item">
+          <div>
+            <div style="font-weight:bold">${e.desc}</div>
+            <div style="font-size:12px;color:#666">${e.date}</div>
+          </div>
+          <div style="color:#dc3545;font-weight:bold">₱${e.amount}</div>
         </div>
       `).join('');
     }
