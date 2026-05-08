@@ -36,7 +36,7 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .checkout-btn { width: 100%; margin-top: 8px; padding: 12px; font-size: 15px; }
 .cat-header { background: #FF6B35; color: white; padding: 4px 8px; margin: 8px 0 4px 0; border-radius: 4px; font-size: 12px; font-weight: bold; grid-column: 1 / -1; }
 .qty-control { display: flex; gap: 3px; align-items: center; margin-top: 4px; position: relative; }
-.qty-input { width: 35px; padding: 4px; text-align: center; border: none; border-radius: 4px; font-size: 11px; font-weight: bold; background: #FF6B35; color: white; }
+.qty-input { width: 35px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; font-weight: bold; background: white; color: #333; }
 .btn-add-small { flex: 1; background: #FF6B35; color: white; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 .btn-add-small:disabled { background: #ccc; }
 .stock-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-height: 300px; overflow-y: auto; }
@@ -166,6 +166,7 @@ function filterCategory(cat,el){
   renderProducts();
 }
 
+// FIX #1: QTY INPUT EDITABLE NA
 function renderProducts(){
   var filtered = currentFilter==='All'? products : products.filter(function(p){return p.cat===currentFilter});
   var html = '';
@@ -185,29 +186,39 @@ function renderProducts(){
     html += '<h4>'+p.name+'</h4>';
     html += '<div class="price">₱'+p.price+'</div>';
     html += '<div class="qty-control">';
-    html += '<input type="number" class="qty-input" id="qty-'+p.id+'" value="'+(cartQty>0?cartQty:1)+'" readonly>';
+    html += '<input type="number" class="qty-input" id="qty-'+p.id+'" value="'+(cartQty>0?cartQty:1)+'" min="1" max="'+p.stock+'">';
     html += '<button class="btn-add-small" onclick="addToCartQty('+p.id+')" '+(p.stock<=0?'disabled':'')+'>+Add</button>';
     html += '</div></div>';
   }
   document.getElementById('productGrid').innerHTML = html;
 }
 
+// FIX #2: ADD YUNG TYPED QTY HINDI +1 LANG
 function addToCartQty(id){
   var p = null;
   for(var i=0;i<products.length;i++){
     if(products[i].id===id){p=products[i];break;}
   }
   if(!p || p.stock<=0){alert('Out of stock!');return}
-  p.stock -= 1;
+
+  var qtyInput = document.getElementById('qty-'+id);
+  var addQty = parseInt(qtyInput.value)||1;
+
+  if(addQty<=0){alert('Enter valid quantity!');return}
+  if(addQty>p.stock){alert('Not enough stock! Available: '+p.stock);return}
+
+  p.stock -= addQty;
   var item = null;
   for(var i=0;i<cart.length;i++){
     if(cart[i].id===id){item=cart[i];break;}
   }
   if(item){
-    item.qty+=1;
+    item.qty+=addQty;
   }else{
-    cart.push({id:p.id,name:p.name,price:p.price,qty:1});
+    cart.push({id:p.id,name:p.name,price:p.price,qty:addQty});
   }
+
+  qtyInput.value = 1;
   saveData();
   renderCart();
   renderProducts();
@@ -312,7 +323,6 @@ function printReceipt(){
   },100);
 }
 
-// FIX #1: MAY EDIT PRICE NA SA STOCK
 function renderProduction(){
   var html = '';
   for(var i=0;i<products.length;i++){
@@ -347,7 +357,6 @@ function addProduction(id){
   input.value = '';
 }
 
-// FIX #2: EDIT PRICE FUNCTION
 function updatePrice(id){
   var input = document.getElementById('price-'+id);
   var newPrice = parseFloat(input.value);
