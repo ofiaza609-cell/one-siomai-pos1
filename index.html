@@ -19,7 +19,8 @@ body { background: #f5f5f5; padding-bottom: 20px; padding-top: 60px; }
 .btn:active { background: #E55A2B; }
 .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
 .btn-print { background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 8px; font-size: 15px; font-weight: bold; }
-.btn-production { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; width: 100%; margin-top: 3px; }
+.btn-production { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 9px; width: 48%; margin-top: 3px; }
+.btn-price { background: #FF9800; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 9px; width: 48%; margin-top: 3px; margin-left: 4%; }
 input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; position: relative; z-index: 2; font-size: 14px; }
 .category-tabs { display: flex; gap: 4px; margin-bottom: 8px; overflow-x: auto; padding-bottom: 4px; }
 .cat-btn { background: #eee; border: none; padding: 6px 12px; border-radius: 15px; white-space: nowrap; cursor: pointer; position: relative; z-index: 2; font-size: 12px; }
@@ -38,17 +39,31 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .qty-input { width: 35px; padding: 4px; text-align: center; border: none; border-radius: 4px; font-size: 11px; font-weight: bold; background: #FF6B35; color: white; }
 .btn-add-small { flex: 1; background: #FF6B35; color: white; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 .btn-add-small:disabled { background: #ccc; }
-.stock-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-height: 250px; overflow-y: auto; }
+.stock-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-height: 300px; overflow-y: auto; }
 .stock-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; background: #fafafa; text-align: center; }
 .stock-item-name { font-size: 10px; font-weight: 600; margin-bottom: 2px; height: 24px; display: flex; align-items: center; justify-content: center; }
 .stock-item-price { font-size: 12px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
 .stock-item-qty { font-size: 11px; color: #666; margin-bottom: 3px; }
 .stock-input { width: 100%; padding: 3px; text-align: center; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; margin-bottom: 3px; }
+.price-input { width: 100%; padding: 3px; text-align: center; border: 1px solid #FF9800; border-radius: 3px; font-size: 10px; margin-bottom: 3px; }
+.btn-group { display: flex; }
 .hidden { display: none; }
 @media print {
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
   body * { visibility: hidden; }
   #receiptPrint, #receiptPrint * { visibility: visible; }
-  #receiptPrint { position: absolute; left: 0; top: 0; width: 100%; }
+  #receiptPrint {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm!important;
+    padding: 5mm!important;
+    font-size: 12px!important;
+  }
+.header,.summary,.card { display: none!important; }
 }
 </style>
 </head>
@@ -67,7 +82,7 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 </div>
 
 <div class="card">
-<h3>📦 Stock + Daily Production</h3>
+<h3>📦 Stock + Daily Production + Price Edit</h3>
 <div id="productionList" class="stock-grid"></div>
 <button class="btn-small" onclick="addStock()" style="margin-top:8px;">+ Add New Product</button>
 </div>
@@ -102,10 +117,9 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 <button class="btn checkout-btn" onclick="checkout()">Checkout + Print</button>
 </div>
 
-<div id="receiptPrint" class="hidden" style="padding:20px;font-family:monospace;font-size:12px;max-width:300px;margin:0 auto"></div>
+<div id="receiptPrint" class="hidden"></div>
 
 <script>
-// UPDATED PRODUCTS - MATCH SA RESIBO MO BOSS
 var products = [
   {id:1,name:'Pork 65\'s',price:150,stock:105,cat:'65\'s'},
   {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
@@ -241,7 +255,6 @@ function updateTotal(){
 
 document.getElementById('cashAmt').addEventListener('input',updateTotal);
 
-// FIX #1: AUTO-PRINT PAG CHECKOUT
 function checkout(){
   if(cart.length===0){alert('Cart is empty!');return}
   var total = 0;
@@ -268,8 +281,6 @@ function checkout(){
   renderProducts();
   renderProduction();
   updateSummary();
-
-  // AUTO-PRINT RESIBO AGAD
   printReceipt();
 }
 
@@ -279,28 +290,29 @@ function printReceipt(){
   var itemsHtml = '';
   for(var i=0;i<t.items.length;i++){
     var it = t.items[i];
-    itemsHtml += '<tr><td>'+it.name+' x'+it.qty+'</td><td style="text-align:right">₱'+(it.price*it.qty)+'</td></tr>';
+    itemsHtml += '<div style="display:flex;justify-content:space-between;margin:2px 0;"><span>'+it.name+' x'+it.qty+'</span><span>₱'+(it.price*it.qty)+'</span></div>';
   }
 
   document.getElementById('receiptPrint').innerHTML =
-    '<div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px">'+
-    '<h2 style="margin:0">ONE SIOMAI</h2>'+
-    '<p style="margin:5px 0">Valenzuela City</p>'+
-    '<p style="margin:0;font-size:10px">'+t.date+'</p></div>'+
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:10px">'+
-    itemsHtml+'</table>'+
-    '<div style="border-top:2px dashed #000;padding-top:10px">'+
-    '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:14px"><span>TOTAL:</span><span>₱'+t.total.toFixed(0)+'</span></div>'+
-    '<div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱'+t.cash.toFixed(0)+'</span></div>'+
-    '<div style="display:flex;justify-content:space-between;font-weight:bold"><span>CHANGE:</span><span>₱'+t.change.toFixed(0)+'</span></div>'+
-    '</div><div style="text-align:center;margin-top:15px;border-top:2px dashed #000;padding-top:10px">'+
-    '<p style="margin:0">Thank you!</p></div>';
+    '<div style="text-align:center;font-weight:bold;font-size:14px;">ONE SIOMAI</div>'+
+    '<div style="text-align:center;font-size:11px;margin-bottom:5px;">Valenzuela City</div>'+
+    '<div style="text-align:center;font-size:10px;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;">'+t.date+'</div>'+
+    itemsHtml+
+    '<div style="border-top:1px dashed #000;margin-top:5px;padding-top:5px;">'+
+    '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>TOTAL:</span><span>₱'+t.total.toFixed(0)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;"><span>CASH:</span><span>₱'+t.cash.toFixed(0)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>CHANGE:</span><span>₱'+t.change.toFixed(0)+'</span></div>'+
+    '</div>'+
+    '<div style="text-align:center;margin-top:8px;border-top:1px dashed #000;padding-top:5px;font-size:11px;">Thank you!</div>';
 
   document.getElementById('receiptPrint').classList.remove('hidden');
-  window.print();
-  setTimeout(function(){document.getElementById('receiptPrint').classList.add('hidden')},100);
+  setTimeout(function(){
+    window.print();
+    document.getElementById('receiptPrint').classList.add('hidden');
+  },100);
 }
 
+// FIX #1: MAY EDIT PRICE NA SA STOCK
 function renderProduction(){
   var html = '';
   for(var i=0;i<products.length;i++){
@@ -309,9 +321,12 @@ function renderProduction(){
     html += '<div class="stock-item-name">'+p.name+'</div>';
     html += '<div class="stock-item-price">₱'+p.price+'</div>';
     html += '<div class="stock-item-qty">Stock: '+p.stock+'</div>';
-    html += '<input type="number" class="stock-input" id="prod-'+p.id+'" placeholder="+" min="1">';
-    html += '<button class="btn-production" onclick="addProduction('+p.id+')">+Add Stock</button>';
-    html += '</div>';
+    html += '<input type="number" class="stock-input" id="prod-'+p.id+'" placeholder="+Stock" min="1">';
+    html += '<input type="number" class="price-input" id="price-'+p.id+'" placeholder="₱Price" value="'+p.price+'" min="0">';
+    html += '<div class="btn-group">';
+    html += '<button class="btn-production" onclick="addProduction('+p.id+')">+Stock</button>';
+    html += '<button class="btn-price" onclick="updatePrice('+p.id+')">₱Price</button>';
+    html += '</div></div>';
   }
   document.getElementById('productionList').innerHTML = html;
 }
@@ -330,6 +345,23 @@ function addProduction(id){
   renderProducts();
   renderProduction();
   input.value = '';
+}
+
+// FIX #2: EDIT PRICE FUNCTION
+function updatePrice(id){
+  var input = document.getElementById('price-'+id);
+  var newPrice = parseFloat(input.value);
+  if(isNaN(newPrice) || newPrice<0){alert('Enter valid price!');return}
+  for(var i=0;i<products.length;i++){
+    if(products[i].id===id){
+      products[i].price = newPrice;
+      break;
+    }
+  }
+  saveData();
+  renderProducts();
+  renderProduction();
+  alert('Price updated to ₱'+newPrice);
 }
 
 function addStock(){
