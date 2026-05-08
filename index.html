@@ -19,6 +19,7 @@ body { background: #f5f5f5; padding-bottom: 20px; padding-top: 60px; }
 .btn:active { background: #E55A2B; }
 .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
 .btn-print { background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 8px; font-size: 15px; font-weight: bold; }
+.btn-production { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; width: 100%; margin-top: 3px; }
 input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; position: relative; z-index: 2; font-size: 14px; }
 .category-tabs { display: flex; gap: 4px; margin-bottom: 8px; overflow-x: auto; padding-bottom: 4px; }
 .cat-btn { background: #eee; border: none; padding: 6px 12px; border-radius: 15px; white-space: nowrap; cursor: pointer; position: relative; z-index: 2; font-size: 12px; }
@@ -27,20 +28,25 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .product-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; text-align: center; position: relative; }
 .product-item h4 { font-size: 11px; margin-bottom: 2px; font-weight: 600; }
 .product-item.price { font-size: 14px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
-.product-item.cat { font-size: 9px; color: #999; }
-.product-item.stock { font-size: 10px; color: #666; }
 .stock-badge { position: absolute; top: 3px; right: 3px; background: #4CAF50; color: white; border-radius: 50%; width: 20px; height: 20px; line-height: 20px; font-size: 10px; }
 .stock-badge.low { background: #f44336; }
 .stock-badge.zero { background: #999; }
-.cart-badge { position: absolute; top: 3px; left: 3px; background: #FF6B35; color: white; border-radius: 50%; width: 20px; height: 20px; line-height: 20px; font-size: 10px; font-weight: bold; }
 .cart-item { display: flex; justify-content: space-between; margin: 4px 0; align-items: center; font-size: 14px; }
 .checkout-btn { width: 100%; margin-top: 8px; padding: 12px; font-size: 15px; }
-.prod-row { display: flex; justify-content: space-between; margin: 2px 0; font-size: 12px; align-items: center; }
 .cat-header { background: #FF6B35; color: white; padding: 4px 8px; margin: 8px 0 4px 0; border-radius: 4px; font-size: 12px; font-weight: bold; grid-column: 1 / -1; }
-.qty-control { display: flex; gap: 3px; align-items: center; margin-top: 4px; }
-.qty-input { width: 35px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; font-weight: bold; }
+.qty-control { display: flex; gap: 3px; align-items: center; margin-top: 4px; position: relative; }
+.qty-input { width: 35px; padding: 4px; text-align: center; border: none; border-radius: 4px; font-size: 11px; font-weight: bold; background: #FF6B35; color: white; }
 .btn-add-small { flex: 1; background: #FF6B35; color: white; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 .btn-add-small:disabled { background: #ccc; }
+
+/* STOCK 3x3 GRID STYLE */
+.stock-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-height: 250px; overflow-y: auto; }
+.stock-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; background: #fafafa; text-align: center; }
+.stock-item-name { font-size: 10px; font-weight: 600; margin-bottom: 2px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.stock-item-price { font-size: 12px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
+.stock-item-qty { font-size: 11px; color: #666; margin-bottom: 3px; }
+.stock-input { width: 100%; padding: 3px; text-align: center; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; margin-bottom: 3px; }
+
 .hidden { display: none; }
 @media print {
   body * { visibility: hidden; }
@@ -64,9 +70,9 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 </div>
 
 <div class="card">
-<h3>📦 Stock</h3>
-<div id="productionList" style="max-height:150px; overflow-y:auto;"></div>
-<button class="btn-small" onclick="addStock()">+ Add Stock</button>
+<h3>📦 Stock + Daily Production</h3>
+<div id="productionList" class="stock-grid"></div>
+<button class="btn-small" onclick="addStock()" style="margin-top:8px;">+ Add New Product</button>
 </div>
 
 <div class="card">
@@ -103,14 +109,7 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 <div id="receiptPrint" class="hidden" style="padding:20px;font-family:monospace;font-size:12px;max-width:300px;margin:0 auto"></div>
 
 <script>
-// VERSION CONTROL - AUTO RESET PAG LUMA
-var APP_VERSION = 'v5.7';
-var savedVersion = localStorage.getItem('appVersion');
-
-if(savedVersion!== APP_VERSION){
-  localStorage.clear();
-  localStorage.setItem('appVersion',APP_VERSION);
-}
+localStorage.clear();
 
 var products = [
   {id:1,name:'Pork 65\'s',price:150,stock:105,cat:'65\'s'},
@@ -142,27 +141,23 @@ var products = [
 ];
 
 var cart = [];
-var salesData = JSON.parse(localStorage.getItem('sales') || '[]');
-var expensesData = JSON.parse(localStorage.getItem('expenses') || '[]');
+var salesData = [];
+var expensesData = [];
 var currentFilter = 'All';
 var lastTransaction = null;
 
 function saveData(){
-  localStorage.setItem('appVersion',APP_VERSION);
   localStorage.setItem('products',JSON.stringify(products));
   localStorage.setItem('sales',JSON.stringify(salesData));
   localStorage.setItem('expenses',JSON.stringify(expensesData));
 }
 
 function loadData(){
-  var savedProducts = localStorage.getItem('products');
-  if(savedProducts) products = JSON.parse(savedProducts);
   renderProducts();
   renderProduction();
   updateSummary();
 }
 
-// FIX #1: FILTER TABS - ISA LANG DAPAT NAKA-ORANGE
 function filterCategory(cat,el){
   currentFilter = cat;
   var tabs = document.querySelectorAll('.cat-btn');
@@ -186,51 +181,41 @@ function renderProducts(){
       if(cart[j].id===p.id){cartQty=cart[j].qty;break;}
     }
     html += '<div class="product-item">';
-    if(cartQty>0) html += '<div class="cart-badge">'+cartQty+'</div>';
     html += '<div class="stock-badge '+(p.stock<=10?'low':p.stock==0?'zero':'')+'">'+p.stock+'</div>';
     html += '<h4>'+p.name+'</h4>';
     html += '<div class="price">₱'+p.price+'</div>';
     html += '<div class="qty-control">';
-    html += '<input type="number" class="qty-input" id="qty-'+p.id+'" value="1" min="1" max="'+p.stock+'">';
+    // COUNTER NASA BOX NA
+    html += '<input type="number" class="qty-input" id="qty-'+p.id+'" value="'+(cartQty>0?cartQty:1)+'" readonly>';
     html += '<button class="btn-add-small" onclick="addToCartQty('+p.id+')" '+(p.stock<=0?'disabled':'')+'>+Add</button>';
     html += '</div></div>';
   }
   document.getElementById('productGrid').innerHTML = html;
 }
 
-// FIX #2: QTY AUTO-COUNT 1 → 2 → 3
 function addToCartQty(id){
-  var qtyInput = document.getElementById('qty-'+id);
-  var qty = parseInt(qtyInput.value)||1;
   var p = null;
   for(var i=0;i<products.length;i++){
     if(products[i].id===id){p=products[i];break;}
   }
   if(!p || p.stock<=0){alert('Out of stock!');return}
-  if(qty>p.stock){alert('Only '+p.stock+' pcs available!');qtyInput.value=p.stock;return}
 
-  p.stock -= qty;
+  p.stock -= 1;
 
   var item = null;
   for(var i=0;i<cart.length;i++){
     if(cart[i].id===id){item=cart[i];break;}
   }
   if(item){
-    item.qty+=qty;
+    item.qty+=1;
   }else{
-    cart.push({id:p.id,name:p.name,price:p.price,qty:qty});
+    cart.push({id:p.id,name:p.name,price:p.price,qty:1});
   }
 
   saveData();
   renderCart();
   renderProducts();
   renderProduction();
-
-  // AUTO-INCREMENT QTY BOX
-  var newQty = Math.min(p.stock, qty + 1);
-  qtyInput.value = newQty;
-  qtyInput.max = p.stock;
-  if(p.stock<=0) qtyInput.value = 0;
 }
 
 function renderCart(){
@@ -309,115 +294,4 @@ function printReceipt(){
   var itemsHtml = '';
   for(var i=0;i<t.items.length;i++){
     var it = t.items[i];
-    itemsHtml += '<tr><td>'+it.name+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right">₱'+it.price+'</td><td style="text-align:right">₱'+(it.price*it.qty).toFixed(2)+'</td></tr>';
-  }
-
-  document.getElementById('receiptPrint').innerHTML =
-    '<div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px">'+
-    '<h2 style="margin:0">ONE SIOMAI</h2>'+
-    '<p style="margin:5px 0">POS Receipt</p>'+
-    '<p style="margin:0;font-size:10px">'+t.date+'</p></div>'+
-    '<table style="width:100%;border-collapse:collapse;margin-bottom:10px">'+
-    '<tr style="border-bottom:1px solid #000"><th style="text-align:left">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'+
-    itemsHtml+'</table>'+
-    '<div style="border-top:2px dashed #000;padding-top:10px">'+
-    '<div style="display:flex;justify-content:space-between;font-size:14px"><span>SUBTOTAL:</span><span>₱'+t.total.toFixed(2)+'</span></div>'+
-    '<div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱'+t.cash.toFixed(2)+'</span></div>'+
-    '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px"><span>CHANGE:</span><span>₱'+t.change.toFixed(2)+'</span></div>'+
-    '</div><div style="text-align:center;margin-top:15px;border-top:2px dashed #000;padding-top:10px">'+
-    '<p style="margin:0">Thank you!</p><p style="margin:5px 0;font-size:10px">Please come again</p></div>';
-
-  document.getElementById('receiptPrint').classList.remove('hidden');
-  window.print();
-  setTimeout(function(){document.getElementById('receiptPrint').classList.add('hidden')},100);
-}
-
-function renderProduction(){
-  var html = '';
-  for(var i=0;i<products.length;i++){
-    var p = products[i];
-    html += '<div class="prod-row">';
-    html += '<span>'+p.name+': '+p.stock+' pcs</span>';
-    html += '<span style="color:#FF6B35;font-weight:bold">₱'+p.price+'</span>';
-    html += '</div>';
-  }
-  document.getElementById('productionList').innerHTML = html;
-}
-
-function addStock(){
-  var name = prompt('Product name:');
-  var price = parseInt(prompt('Price:'));
-  var stock = parseInt(prompt('Initial stock:'));
-  if(name && price && stock){
-    products.push({id:Date.now(),name:name,price:price,stock:stock,cat:'EXTRAS'});
-    saveData();
-    renderProducts();
-    renderProduction();
-  }
-}
-
-function addExpense(){
-  var item = document.getElementById('expenseItem').value.trim();
-  var amt = parseFloat(document.getElementById('expenseAmt').value)||0;
-  if(!item || amt<=0){alert('Enter valid item and amount!');return}
-  expensesData.push({id:Date.now(),item:item,amount:amt,date:new Date().toLocaleString()});
-  saveData();
-  updateSummary();
-  document.getElementById('expenseItem').value='';
-  document.getElementById('expenseAmt').value='';
-  alert('Expense added!');
-}
-
-function updateSummary(){
-  var totalSales = 0;
-  for(var i=0;i<salesData.length;i++) totalSales += salesData[i].total;
-  var totalExp = 0;
-  for(var i=0;i<expensesData.length;i++) totalExp += expensesData[i].amount;
-  var items = 0;
-  for(var i=0;i<salesData.length;i++){
-    for(var j=0;j<salesData[i].items.length;j++) items += salesData[i].items[j].qty;
-  }
-  document.getElementById('sales').textContent = totalSales.toFixed(2);
-  document.getElementById('expenses').textContent = totalExp.toFixed(2);
-  document.getElementById('net').textContent = (totalSales - totalExp).toFixed(2);
-  document.getElementById('itemsSold').textContent = items;
-  document.getElementById('transCount').textContent = salesData.length;
-}
-
-function resetDay(){
-  if(confirm('Reset all data for new day?')){
-    salesData = [];
-    expensesData = [];
-    cart = [];
-    saveData();
-    renderCart();
-    updateSummary();
-  }
-}
-
-function resetAllData(){
-  if(confirm('🔄 RESET ALL: Delete all products and data? This will clear localStorage!')){
-    localStorage.clear();
-    location.reload();
-  }
-}
-
-function printReport(){
-  alert('Printing report...');
-  window.print();
-}
-
-function manualBackup(){
-  var data = {products:products,sales:salesData,expenses:expensesData};
-  var blob = new Blob([JSON.stringify(data)],{type:'application/json'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'siomai-backup-'+Date.now()+'.json';
-  a.click();
-}
-
-loadData();
-</script>
-</body>
-</html>
+    itemsHtml += '<tr><td>'+it.name+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right">₱'+it.price+'</td><td style="text-align:right">₱'+(it.price*it.qty).toFixed(2)+
