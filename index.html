@@ -122,7 +122,6 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 
 <div id="receiptPrint"></div>
 
-<!-- ADD PRODUCT MODAL -->
 <div id="addProductModal" class="modal">
 <div class="modal-content">
 <h3>➕ Add New Product</h3>
@@ -148,12 +147,14 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 var products = [
   {id:1,name:'Pork 65\'s',price:160,stock:602,cat:'65\'s'},
   {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
+  {id:3,name:'Beff 65',price:150,stock:100,cat:'65\'s'},
   {id:5,name:'Pork 30\'s',price:80,stock:93,cat:'30\'s'},
   {id:6,name:'Chicken 30\'s',price:80,stock:100,cat:'30\'s'},
   {id:8,name:'Pork Big Siomai',price:120,stock:86,cat:'BIG SIOMAI'},
   {id:10,name:'Japanese Big Siomai',price:150,stock:100,cat:'BIG SIOMAI'},
   {id:12,name:'Sharksfin',price:110,stock:92,cat:'DUMPLINGS'},
   {id:13,name:'Gyoza',price:110,stock:100,cat:'DUMPLINGS'},
+  {id:14,name:'Hakaw',price:280,stock:20,cat:'DUMPLINGS'},
   {id:27,name:'Jumbo Asado',price:200,stock:50,cat:'SIOPAO'},
   {id:19,name:'Chili Garlic',price:75,stock:999,cat:'EXTRAS'},
   {id:28,name:'Siopao Sauce',price:0,stock:999,cat:'EXTRAS'},
@@ -359,7 +360,6 @@ function printReceipt(){
   },300);
 }
 
-// UPDATED: STOCK BY CATEGORY
 function renderProduction(){
   var filtered = currentStockFilter==='All'? products : products.filter(function(p){return p.cat===currentStockFilter});
   var html = '';
@@ -375,7 +375,7 @@ function renderProduction(){
     html += '<div class="stock-item-price">₱'+p.price+'</div>';
     html += '<div class="stock-item-qty">Stock: '+p.stock+'</div>';
     html += '<input type="number" class="stock-input" id="prod-'+p.id+'" placeholder="+Stock" min="1">';
-    html += '<input type="number" class="price-input" id="price-'+p.id+'" placeholder="₱Price" value="'+p.price+'" min="0">';
+    html += '<input type="number" class="price-input" id="price-'+p.id+'" value="'+p.price+'" min="0">';
     html += '<div class="btn-group">';
     html += '<button class="btn-production" onclick="addProduction('+p.id+')">+Stock</button>';
     html += '<button class="btn-price" onclick="updatePrice('+p.id+')">₱Price</button>';
@@ -416,7 +416,6 @@ function updatePrice(id){
   alert('Price updated to ₱'+newPrice);
 }
 
-// NEW: ADD PRODUCT WITH CATEGORY
 function showAddProductModal(){
   document.getElementById('addProductModal').style.display = 'block';
 }
