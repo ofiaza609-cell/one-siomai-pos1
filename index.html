@@ -29,9 +29,8 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .product-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; text-align: center; position: relative; }
 .product-item h4 { font-size: 11px; margin-bottom: 2px; font-weight: 600; }
 .product-item.price { font-size: 14px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
-.stock-badge { position: absolute; top: 3px; right: 3px; background: #4CAF50; color: white; border-radius: 50%; width: 20px; height: 20px; line-height: 20px; font-size: 10px; }
-.stock-badge.low { background: #f44336; }
-.stock-badge.zero { background: #999; }
+/* TINANGGAL NA GREEN BADGE */
+.stock-badge { display: none; }
 .cart-item { display: flex; justify-content: space-between; margin: 4px 0; align-items: center; font-size: 14px; }
 .checkout-btn { width: 100%; margin-top: 8px; padding: 12px; font-size: 15px; }
 .cat-header { background: #FF6B35; color: white; padding: 4px 8px; margin: 8px 0 4px 0; border-radius: 4px; font-size: 12px; font-weight: bold; grid-column: 1 / -1; }
@@ -49,21 +48,20 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .btn-group { display: flex; }
 .hidden { display: none; }
 @media print {
-  @page {
-    size: 58mm auto;
-    margin: 0;
-  }
+  @page { size: 58mm auto; margin: 0; }
+  body { margin: 0; padding: 0; }
   body * { visibility: hidden; }
   #receiptPrint, #receiptPrint * { visibility: visible; }
   #receiptPrint {
     position: absolute;
     left: 0;
     top: 0;
-    width: 58mm!important;
-    padding: 5mm!important;
-    font-size: 12px!important;
+    width: 58mm;
+    padding: 3mm;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.2;
   }
-.header,.summary,.card { display: none!important; }
 }
 </style>
 </head>
@@ -117,11 +115,11 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 <button class="btn checkout-btn" onclick="checkout()">Checkout + Print</button>
 </div>
 
-<div id="receiptPrint" class="hidden"></div>
+<div id="receiptPrint"></div>
 
 <script>
 var products = [
-  {id:1,name:'Pork 65\'s',price:150,stock:105,cat:'65\'s'},
+  {id:1,name:'Pork 65\'s',price:160,stock:602,cat:'65\'s'},
   {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
   {id:5,name:'Pork 30\'s',price:80,stock:93,cat:'30\'s'},
   {id:6,name:'Chicken 30\'s',price:80,stock:100,cat:'30\'s'},
@@ -166,7 +164,6 @@ function filterCategory(cat,el){
   renderProducts();
 }
 
-// FIX #1: QTY INPUT EDITABLE NA
 function renderProducts(){
   var filtered = currentFilter==='All'? products : products.filter(function(p){return p.cat===currentFilter});
   var html = '';
@@ -182,7 +179,6 @@ function renderProducts(){
       if(cart[j].id===p.id){cartQty=cart[j].qty;break;}
     }
     html += '<div class="product-item">';
-    html += '<div class="stock-badge '+(p.stock<=10?'low':p.stock==0?'zero':'')+'">'+p.stock+'</div>';
     html += '<h4>'+p.name+'</h4>';
     html += '<div class="price">₱'+p.price+'</div>';
     html += '<div class="qty-control">';
@@ -193,7 +189,6 @@ function renderProducts(){
   document.getElementById('productGrid').innerHTML = html;
 }
 
-// FIX #2: ADD YUNG TYPED QTY HINDI +1 LANG
 function addToCartQty(id){
   var p = null;
   for(var i=0;i<products.length;i++){
@@ -295,32 +290,34 @@ function checkout(){
   printReceipt();
 }
 
+// FIX #1: PRINT FIX - MAY CONTENT NA BAGO MAG PRINT
 function printReceipt(){
   if(!lastTransaction){alert('No transaction to print!');return}
   var t = lastTransaction;
   var itemsHtml = '';
   for(var i=0;i<t.items.length;i++){
     var it = t.items[i];
-    itemsHtml += '<div style="display:flex;justify-content:space-between;margin:2px 0;"><span>'+it.name+' x'+it.qty+'</span><span>₱'+(it.price*it.qty)+'</span></div>';
+    itemsHtml += '<div style="display:flex;justify-content:space-between;"><span>'+it.name+' x'+it.qty+'</span><span>₱'+(it.price*it.qty)+'</span></div>';
   }
 
-  document.getElementById('receiptPrint').innerHTML =
-    '<div style="text-align:center;font-weight:bold;font-size:14px;">ONE SIOMAI</div>'+
-    '<div style="text-align:center;font-size:11px;margin-bottom:5px;">Valenzuela City</div>'+
-    '<div style="text-align:center;font-size:10px;border-bottom:1px dashed #000;padding-bottom:5px;margin-bottom:5px;">'+t.date+'</div>'+
+  var receipt =
+    '<div style="text-align:center;font-weight:bold;">ONE SIOMAI</div>'+
+    '<div style="text-align:center;">Valenzuela City</div>'+
+    '<div style="text-align:center;border-bottom:1px dashed #000;margin:5px 0;padding-bottom:5px;">'+t.date+'</div>'+
     itemsHtml+
     '<div style="border-top:1px dashed #000;margin-top:5px;padding-top:5px;">'+
     '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>TOTAL:</span><span>₱'+t.total.toFixed(0)+'</span></div>'+
     '<div style="display:flex;justify-content:space-between;"><span>CASH:</span><span>₱'+t.cash.toFixed(0)+'</span></div>'+
     '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>CHANGE:</span><span>₱'+t.change.toFixed(0)+'</span></div>'+
     '</div>'+
-    '<div style="text-align:center;margin-top:8px;border-top:1px dashed #000;padding-top:5px;font-size:11px;">Thank you!</div>';
+    '<div style="text-align:center;margin-top:8px;border-top:1px dashed #000;padding-top:5px;">Thank you!</div>';
 
-  document.getElementById('receiptPrint').classList.remove('hidden');
+  var receiptDiv = document.getElementById('receiptPrint');
+  receiptDiv.innerHTML = receipt;
+
   setTimeout(function(){
     window.print();
-    document.getElementById('receiptPrint').classList.add('hidden');
-  },100);
+  },200);
 }
 
 function renderProduction(){
