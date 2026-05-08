@@ -109,8 +109,6 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 <div id="receiptPrint" class="hidden" style="padding:20px;font-family:monospace;font-size:12px;max-width:300px;margin:0 auto"></div>
 
 <script>
-localStorage.clear();
-
 var products = [
   {id:1,name:'Pork 65\'s',price:150,stock:105,cat:'65\'s'},
   {id:2,name:'Beef 65\'s',price:150,stock:100,cat:'65\'s'},
@@ -146,16 +144,25 @@ var expensesData = [];
 var currentFilter = 'All';
 var lastTransaction = null;
 
+// FIX: LOAD SAVED DATA FIRST BAGO RENDER
+function initApp(){
+  var savedProducts = localStorage.getItem('products');
+  var savedSales = localStorage.getItem('sales');
+  var savedExpenses = localStorage.getItem('expenses');
+
+  if(savedProducts) products = JSON.parse(savedProducts);
+  if(savedSales) salesData = JSON.parse(savedSales);
+  if(savedExpenses) expensesData = JSON.parse(savedExpenses);
+
+  renderProducts();
+  renderProduction();
+  updateSummary();
+}
+
 function saveData(){
   localStorage.setItem('products',JSON.stringify(products));
   localStorage.setItem('sales',JSON.stringify(salesData));
   localStorage.setItem('expenses',JSON.stringify(expensesData));
-}
-
-function loadData(){
-  renderProducts();
-  renderProduction();
-  updateSummary();
 }
 
 function filterCategory(cat,el){
@@ -185,7 +192,6 @@ function renderProducts(){
     html += '<h4>'+p.name+'</h4>';
     html += '<div class="price">₱'+p.price+'</div>';
     html += '<div class="qty-control">';
-    // COUNTER NASA BOX NA
     html += '<input type="number" class="qty-input" id="qty-'+p.id+'" value="'+(cartQty>0?cartQty:1)+'" readonly>';
     html += '<button class="btn-add-small" onclick="addToCartQty('+p.id+')" '+(p.stock<=0?'disabled':'')+'>+Add</button>';
     html += '</div></div>';
@@ -294,4 +300,136 @@ function printReceipt(){
   var itemsHtml = '';
   for(var i=0;i<t.items.length;i++){
     var it = t.items[i];
-    itemsHtml += '<tr><td>'+it.name+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right">₱'+it.price+'</td><td style="text-align:right">₱'+(it.price*it.qty).toFixed(2)+
+    itemsHtml += '<tr><td>'+it.name+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right">₱'+it.price+'</td><td style="text-align:right">₱'+(it.price*it.qty).toFixed(2)+'</td></tr>';
+  }
+
+  document.getElementById('receiptPrint').innerHTML =
+    '<div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px">'+
+    '<h2 style="margin:0">ONE SIOMAI</h2>'+
+    '<p style="margin:5px 0">POS Receipt</p>'+
+    '<p style="margin:0;font-size:10px">'+t.date+'</p></div>'+
+    '<table style="width:100%;border-collapse:collapse;margin-bottom:10px">'+
+    '<tr style="border-bottom:1px solid #000"><th style="text-align:left">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'+
+    itemsHtml+'</table>'+
+    '<div style="border-top:2px dashed #000;padding-top:10px">'+
+    '<div style="display:flex;justify-content:space-between;font-size:14px"><span>SUBTOTAL:</span><span>₱'+t.total.toFixed(2)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱'+t.cash.toFixed(2)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px"><span>CHANGE:</span><span>₱'+t.change.toFixed(2)+'</span></div>'+
+    '</div><div style="text-align:center;margin-top:15px;border-top:2px dashed #000;padding-top:10px">'+
+    '<p style="margin:0">Thank you!</p><p style="margin:5px 0;font-size:10px">Please come again</p></div>';
+
+  document.getElementById('receiptPrint').classList.remove('hidden');
+  window.print();
+  setTimeout(function(){document.getElementById('receiptPrint').classList.add('hidden')},100);
+}
+
+// STOCK 3x3 GRID + DAILY PRODUCTION
+function renderProduction(){
+  var html = '';
+  for(var i=0;i<products.length;i++){
+    var p = products[i];
+    html += '<div class="stock-item">';
+    html += '<div class="stock-item-name">'+p.name+'</div>';
+    html += '<div class="stock-item-price">₱'+p.price+'</div>';
+    html += '<div class="stock-item-qty">Stock: '+p.stock+'</div>';
+    html += '<input type="number" class="stock-input" id="prod-'+p.id+'" placeholder="+" min="1">';
+    html += '<button class="btn-production" onclick="addProduction('+p.id+')">+Add Stock</button>';
+    html += '</div>';
+  }
+  document.getElementById('productionList').innerHTML = html;
+}
+
+function addProduction(id){
+  var input = document.getElementById('prod-'+id);
+  var addQty = parseInt(input.value)||0;
+  if(addQty<=0){alert('Enter valid quantity!');return}
+
+  for(var i=0;i<products.length;i++){
+    if(products[i].id===id){
+      products[i].stock += addQty;
+      break;
+    }
+  }
+  saveData();
+  renderProducts();
+  renderProduction();
+  input.value = '';
+}
+
+function addStock(){
+  var name = prompt('Product name:');
+  var price = parseInt(prompt('Price:'));
+  var stock = parseInt(prompt('Initial stock:'));
+  if(name && price && stock){
+    products.push({id:Date.now(),name:name,price:price,stock:stock,cat:'EXTRAS'});
+    saveData();
+    renderProducts();
+    renderProduction();
+  }
+}
+
+function addExpense(){
+  var item = document.getElementById('expenseItem').value.trim();
+  var amt = parseFloat(document.getElementById('expenseAmt').value)||0;
+  if(!item || amt<=0){alert('Enter valid item and amount!');return}
+  expensesData.push({id:Date.now(),item:item,amount:amt,date:new Date().toLocaleString()});
+  saveData();
+  updateSummary();
+  document.getElementById('expenseItem').value='';
+  document.getElementById('expenseAmt').value='';
+  alert('Expense added!');
+}
+
+function updateSummary(){
+  var totalSales = 0;
+  for(var i=0;i<salesData.length;i++) totalSales += salesData[i].total;
+  var totalExp = 0;
+  for(var i=0;i<expensesData.length;i++) totalExp += expensesData[i].amount;
+  var items = 0;
+  for(var i=0;i<salesData.length;i++){
+    for(var j=0;j<salesData[i].items.length;j++) items += salesData[i].items[j].qty;
+  }
+  document.getElementById('sales').textContent = totalSales.toFixed(2);
+  document.getElementById('expenses').textContent = totalExp.toFixed(2);
+  document.getElementById('net').textContent = (totalSales - totalExp).toFixed(2);
+  document.getElementById('itemsSold').textContent = items;
+  document.getElementById('transCount').textContent = salesData.length;
+}
+
+function resetDay(){
+  if(confirm('Reset all data for new day?')){
+    salesData = [];
+    expensesData = [];
+    cart = [];
+    saveData();
+    renderCart();
+    updateSummary();
+  }
+}
+
+function resetAllData(){
+  if(confirm('🔄 RESET ALL: Delete all products and data? This will clear localStorage!')){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+function printReport(){
+  alert('Printing report...');
+  window.print();
+}
+
+function manualBackup(){
+  var data = {products:products,sales:salesData,expenses:expensesData};
+  var blob = new Blob([JSON.stringify(data)],{type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'siomai-backup-'+Date.now()+'.json';
+  a.click();
+}
+
+initApp();
+</script>
+</body>
+</html>
