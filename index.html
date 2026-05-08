@@ -51,22 +51,22 @@
   <div class="header">🥟 One SIOMAi POS</div>
   
   <div class="tabs">
-    <div class="tab active" onclick="showTab('products')">PRODUCTS</div>
-    <div class="tab" onclick="showTab('stock')">STOCK</div>
-    <div class="tab" onclick="showTab('sales')">SALES</div>
-    <div class="tab" onclick="showTab('expenses')">EXPENSES</div>
+    <div class="tab active" onclick="showTab('products',this)">PRODUCTS</div>
+    <div class="tab" onclick="showTab('stock',this)">STOCK</div>
+    <div class="tab" onclick="showTab('sales',this)">SALES</div>
+    <div class="tab" onclick="showTab('expenses',this)">EXPENSES</div>
   </div>
 
   <div class="content">
     <div id="products" class="section active">
       <div class="tabs" style="top:0;margin:-15px -15px 15px -15px">
-        <div class="tab active" onclick="filterProducts('all')">All</div>
-        <div class="tab" onclick="filterProducts('65')">65's</div>
-        <div class="tab" onclick="filterProducts('30')">30's</div>
-        <div class="tab" onclick="filterProducts('big')">BIG</div>
-        <div class="tab" onclick="filterProducts('dumpling')">DUMPLINGS</div>
-        <div class="tab" onclick="filterProducts('siop')">SIOPAO</div>
-        <div class="tab" onclick="filterProducts('extras')">EXTRAS</div>
+        <div class="tab active" onclick="filterProducts('all',this)">All</div>
+        <div class="tab" onclick="filterProducts('65',this)">65's</div>
+        <div class="tab" onclick="filterProducts('30',this)">30's</div>
+        <div class="tab" onclick="filterProducts('big',this)">BIG</div>
+        <div class="tab" onclick="filterProducts('dumpling',this)">DUMPLINGS</div>
+        <div class="tab" onclick="filterProducts('siop',this)">SIOPAO</div>
+        <div class="tab" onclick="filterProducts('extras',this)">EXTRAS</div>
       </div>
       <div id="productList"></div>
     </div>
@@ -107,39 +107,28 @@
 
   <script>
     let products = [
-      // 65's SIOMAI
       {id:1,name:'Pork Siomai',price:150,stock:493,cat:'65'},
       {id:2,name:'Beef Siomai',price:150,stock:149,cat:'65'},
       {id:3,name:'Chicken Siomai',price:150,stock:499,cat:'65'},
       {id:4,name:'Japanese Siomai',price:150,stock:150,cat:'65'},
       {id:16,name:'Shrimp Siomai',price:150,stock:100,cat:'65'},
-      
-      // 30's SIOMAI
       {id:5,name:'Pork Siomai 30s',price:30,stock:100,cat:'30'},
       {id:6,name:'Beef Siomai 30s',price:30,stock:100,cat:'30'},
       {id:7,name:'Chicken Siomai 30s',price:30,stock:100,cat:'30'},
       {id:17,name:'Japanese Siomai 30s',price:120,stock:100,cat:'30'},
-      
-      // BIG SIOMAI
       {id:8,name:'BIG Pork',price:120,stock:50,cat:'big'},
       {id:9,name:'BIG Beef',price:120,stock:50,cat:'big'},
       {id:10,name:'BIG Japanese',price:150,stock:50,cat:'big'},
       {id:11,name:'BIG Chicken',price:120,stock:50,cat:'big'},
-      
-      // DUMPLINGS
       {id:12,name:'Sharksfin Dumpling',price:80,stock:80,cat:'dumpling'},
       {id:13,name:'Gyoza Dumpling',price:80,stock:80,cat:'dumpling'},
       {id:18,name:'Hakaw',price:100,stock:50,cat:'dumpling'},
-      
-      // SIOPAO - KUMPLETO NA
       {id:14,name:'Asado Siopao',price:35,stock:60,cat:'siop'},
       {id:15,name:'Bola-Bola Siopao',price:35,stock:60,cat:'siop'},
       {id:22,name:'Chicken Siopao',price:35,stock:60,cat:'siop'},
       {id:23,name:'Combi Siopao',price:40,stock:60,cat:'siop'},
       {id:24,name:'Mini Asado',price:20,stock:100,cat:'siop'},
       {id:25,name:'Mini Bola-Bola',price:20,stock:100,cat:'siop'},
-      
-      // EXTRAS
       {id:19,name:'Chili Garlic Sauce',price:5,stock:999,cat:'extras'},
       {id:20,name:'Toyomansi Sauce',price:5,stock:999,cat:'extras'},
       {id:21,name:'Extra Rice',price:15,stock:200,cat:'extras'},
@@ -174,17 +163,17 @@
       saveData();
     }
 
-    function showTab(tab){
+    function showTab(tab,el){
       document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-      document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tabs > .tab').forEach(t=>t.classList.remove('active'));
       document.getElementById(tab).classList.add('active');
-      event.target.classList.add('active');
+      el.classList.add('active');
     }
 
-    function filterProducts(cat){
+    function filterProducts(cat,el){
       currentFilter = cat;
       document.querySelectorAll('#products .tab').forEach(t=>t.classList.remove('active'));
-      event.target.classList.add('active');
+      el.classList.add('active');
       renderProducts();
     }
 
@@ -269,4 +258,87 @@
     function checkout(){
       if(cart.length===0){alert('Cart is empty!');return}
       let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
-     
+      let cash = parseFloat(document.getElementById('cashAmount').value)||0;
+      if(cash<total){alert('Insufficient cash!');return}
+      
+      cart.forEach(item=>{
+        let p = products.find(x=>x.id===item.id);
+        p.stock -= item.qty;
+      });
+      
+      let transaction = {
+        id:Date.now(),
+        date:new Date().toLocaleString(),
+        items:[...cart],
+        total:total,
+        cash:cash,
+        change:cash-total
+      };
+      
+      sales.push(transaction);
+      lastTransaction = transaction;
+      saveData();
+      
+      cart = [];
+      document.getElementById('cashAmount').value = '';
+      renderCart();
+      renderProducts();
+      renderStock();
+      updateSales();
+      alert('Transaction saved! Change: ₱'+(cash-total));
+    }
+
+    function printReceipt(){
+      if(!lastTransaction){alert('No transaction to print!');return}
+      let t = lastTransaction;
+      let itemsHtml = t.items.map(i=>`
+        <tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">₱${i.price}</td><td style="text-align:right">₱${i.price*i.qty}</td></tr>
+      `).join('');
+      
+      document.getElementById('receiptPrint').innerHTML = `
+        <div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px">
+          <h2 style="margin:0">ONE SIOMAI</h2>
+          <p style="margin:5px 0">POS Receipt</p>
+          <p style="margin:0;font-size:10px">${t.date}</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+          <tr style="border-bottom:1px solid #000"><th style="text-align:left">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+          ${itemsHtml}
+        </table>
+        <div style="border-top:2px dashed #000;padding-top:10px">
+          <div style="display:flex;justify-content:space-between;font-size:14px"><span>SUBTOTAL:</span><span>₱${t.total}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱${t.cash}</span></div>
+          <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px"><span>CHANGE:</span><span>₱${t.change}</span></div>
+        </div>
+        <div style="text-align:center;margin-top:15px;border-top:2px dashed #000;padding-top:10px">
+          <p style="margin:0">Thank you!</p>
+          <p style="margin:5px 0;font-size:10px">Please come again</p>
+        </div>
+      `;
+      
+      document.getElementById('receiptPrint').classList.remove('hidden');
+      window.print();
+      setTimeout(()=>document.getElementById('receiptPrint').classList.add('hidden'),100);
+    }
+
+    function updateSales(){
+      let total = sales.reduce((sum,t)=>sum+t.total,0);
+      let items = sales.reduce((sum,t)=>sum+t.items.reduce((s,i)=>s+i.qty,0),0);
+      document.getElementById('totalSales').textContent = total;
+      document.getElementById('itemsSold').textContent = items + ' pcs';
+      document.getElementById('totalTrans').textContent = sales.length;
+      
+      document.getElementById('transList').innerHTML = sales.slice(-10).reverse().map(t=>`
+        <div style="background:#f9f9f9;padding:10px;margin:5px 0;border-radius:6px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;font-weight:bold">
+            <span>${t.date}</span><span>₱${t.total}</span>
+          </div>
+          <div style="color:#666;margin-top:5px">${t.items.map(i=>i.name+' x'+i.qty).join(', ')}</div>
+        </div>
+      `).join('');
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
