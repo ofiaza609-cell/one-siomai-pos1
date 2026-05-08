@@ -35,7 +35,7 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 .qty-input { width: 35px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; font-weight: bold; background: white; color: #333; }
 .btn-add-small { flex: 1; background: #FF6B35; color: white; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 .btn-add-small:disabled { background: #ccc; }
-.stock-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-height: 400px; overflow-y: auto; }
+.stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-height: 400px; overflow-y: auto; }
 .stock-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; background: #fafafa; text-align: center; }
 .stock-item-name { font-size: 10px; font-weight: 600; margin-bottom: 2px; height: 24px; display: flex; align-items: center; justify-content: center; }
 .stock-item-price { font-size: 12px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
@@ -171,19 +171,16 @@ var lastTransaction = null;
 
 function initApp(){
   var savedProducts = localStorage.getItem('products');
-
   if(savedProducts && JSON.parse(savedProducts).length > 0) {
     products = JSON.parse(savedProducts);
   } else {
     products = defaultProducts.slice();
     saveData();
   }
-
   var savedSales = localStorage.getItem('sales');
   var savedExpenses = localStorage.getItem('expenses');
   if(savedSales) salesData = JSON.parse(savedSales);
   if(savedExpenses) expensesData = JSON.parse(savedExpenses);
-
   renderProducts();
   renderProduction();
   updateSummary();
@@ -195,19 +192,21 @@ function saveData(){
   localStorage.setItem('expenses',JSON.stringify(expensesData));
 }
 
-// FIX #1: MAY SPACE NA - IMPORTANTE!
+// FIX #1: BULLETPROOF NA TO - GAMIT getElementById + getElementsByClassName
 function filterCategory(cat,el){
   currentFilter = cat;
-  var tabs = document.querySelectorAll('#categoryTabs.cat-btn');
+  var parent = document.getElementById('categoryTabs');
+  var tabs = parent.getElementsByClassName('cat-btn');
   for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
   el.classList.add('active');
   renderProducts();
 }
 
-// FIX #2: MAY SPACE NA RIN - IMPORTANTE!
+// FIX #2: BULLETPROOF NA RIN TO
 function filterStockCategory(cat,el){
   currentStockFilter = cat;
-  var tabs = document.querySelectorAll('#stockCategoryTabs.cat-btn');
+  var parent = document.getElementById('stockCategoryTabs');
+  var tabs = parent.getElementsByClassName('cat-btn');
   for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
   el.classList.add('active');
   renderProduction();
@@ -244,13 +243,10 @@ function addToCartQty(id){
     if(products[i].id===id){p=products[i];break;}
   }
   if(!p || p.stock<=0){alert('Out of stock!');return}
-
   var qtyInput = document.getElementById('qty-'+id);
   var addQty = parseInt(qtyInput.value)||1;
-
   if(addQty<=0){alert('Enter valid quantity!');return}
   if(addQty>p.stock){alert('Not enough stock! Available: '+p.stock);return}
-
   p.stock -= addQty;
   var item = null;
   for(var i=0;i<cart.length;i++){
@@ -261,7 +257,6 @@ function addToCartQty(id){
   }else{
     cart.push({id:p.id,name:p.name,price:p.price,qty:addQty});
   }
-
   qtyInput.value = 1;
   saveData();
   renderCart();
@@ -316,7 +311,6 @@ function checkout(){
   for(var i=0;i<cart.length;i++) total += cart[i].price*cart[i].qty;
   var cash = parseFloat(document.getElementById('cashAmt').value)||0;
   if(cash<total){alert('Insufficient cash!');return}
-
   var transaction = {
     id:Date.now(),
     date:new Date().toLocaleString(),
@@ -325,11 +319,9 @@ function checkout(){
     cash:cash,
     change:cash-total
   };
-
   salesData.push(transaction);
   lastTransaction = transaction;
   saveData();
-
   cart = [];
   document.getElementById('cashAmt').value = '';
   renderCart();
@@ -347,7 +339,6 @@ function printReceipt(){
     var it = t.items[i];
     itemsHtml += '<div style="display:flex;justify-content:space-between;font-size:10px;margin:1px 0;"><span>'+it.name+' x'+it.qty+'</span><span>₱'+(it.price*it.qty)+'</span></div>';
   }
-
   var receipt =
     '<div style="text-align:center;font-weight:bold;font-size:12px;">ONE SIOMAI</div>'+
     '<div style="text-align:center;font-size:10px;">Valenzuela City</div>'+
@@ -359,10 +350,8 @@ function printReceipt(){
     '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>CHANGE:</span><span>₱'+t.change.toFixed(0)+'</span></div>'+
     '</div>'+
     '<div style="text-align:center;margin-top:4px;border-top:1px dashed #000;padding-top:2px;font-size:10px;">Thank you!</div>';
-
   var receiptDiv = document.getElementById('receiptPrint');
   receiptDiv.innerHTML = receipt;
-
   setTimeout(function(){
     window.print();
   },300);
@@ -440,12 +429,10 @@ function addNewProduct(){
   var cat = document.getElementById('newProductCat').value;
   var price = parseFloat(document.getElementById('newProductPrice').value);
   var stock = parseInt(document.getElementById('newProductStock').value);
-
   if(!name || isNaN(price) || isNaN(stock)){
     alert('Fill all fields!');
     return;
   }
-
   products.push({
     id:Date.now(),
     name:name,
@@ -453,7 +440,6 @@ function addNewProduct(){
     stock:stock,
     cat:cat
   });
-
   saveData();
   renderProducts();
   renderProduction();
