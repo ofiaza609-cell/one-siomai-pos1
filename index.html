@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>One SIOMAi POS</title>
 <meta name="theme-color" content="#FF6B35">
+
+<!-- PWA OFFLINE SETUP -->
+<link rel="manifest" href="data:application/manifest+json,{
+  'name': 'One SIOMAi POS',
+  'short_name': 'SIOMAi POS',
+  'start_url': '.',
+  'display': 'standalone',
+  'background_color': '#FF6B35',
+  'theme_color': '#FF6B35',
+  'icons': [{
+    'src': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    'sizes': '192x192',
+    'type': 'image/png'
+  }]
+}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial; }
 body { background: #f5f5f5; padding-bottom: 20px; padding-top: 60px; }
@@ -49,6 +68,7 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 .modal input,.modal select { width: 100%; margin: 5px 0; }
 .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
 .modal-btns button { flex: 1; }
+.offline-badge { position: fixed; bottom: 10px; right: 10px; background: #4CAF50; color: white; padding: 5px 10px; border-radius: 15px; font-size: 10px; z-index: 300; display: none; }
 @media print {
   @page { size: 58mm auto!important; margin: 0!important; }
   html, body { width: 58mm!important; height: fit-content!important; margin: 0!important; padding: 0!important; overflow: hidden!important; }
@@ -58,11 +78,11 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
     position: absolute!important;
     left: 0!important;
     top: 0!important;
-    width: 56mm!important;
-    padding: 1mm!important;
+    width: 57mm!important;
+    padding: 0.5mm!important;
     font-family: 'Courier New', monospace!important;
-    font-size: 9px!important;
-    line-height: 1!important;
+    font-size: 8px!important;
+    line-height: 0.9!important;
     background: white!important;
     page-break-after: avoid!important;
     page-break-inside: avoid!important;
@@ -73,6 +93,7 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 </head>
 <body>
 <div class="header">🥟 One SIOMAi POS</div>
+<div class="offline-badge" id="offlineBadge">✓ OFFLINE READY</div>
 
 <div class="summary">
 <div class="summary-row"><span>Sales:</span><span>₱<span id="sales">0.00</span></span></div>
@@ -154,6 +175,25 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 </div>
 
 <script>
+// OFFLINE PWA SETUP
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([`
+      const CACHE_NAME = 'siomai-pos-v1';
+      const urlsToCache = ['.'];
+      self.addEventListener('install', e => {
+        e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(urlsToCache)));
+      });
+      self.addEventListener('fetch', e => {
+        e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+      });
+    `], {type: 'text/javascript'}))).then(() => {
+      document.getElementById('offlineBadge').style.display = 'block';
+      setTimeout(() => document.getElementById('offlineBadge').style.display = 'none', 3000);
+    });
+  });
+}
+
 var defaultProducts = [
   {id:1,name:'Pork 65\'s',price:160,stock:602,cat:'65\'s'},
   {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
