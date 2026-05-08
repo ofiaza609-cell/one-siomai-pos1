@@ -81,4 +81,303 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 <button class="cat-btn active" onclick="filterStockCategory('All',this)">All</button>
 <button class="cat-btn" onclick="filterStockCategory('65\'s',this)">65's</button>
 <button class="cat-btn" onclick="filterStockCategory('30\'s',this)">30's</button>
-<button
+<button class="cat-btn" onclick="filterStockCategory('BIG SIOMAI',this)">BIG</button>
+<button class="cat-btn" onclick="filterStockCategory('DUMPLINGS',this)">DUMPLINGS</button>
+<button class="cat-btn" onclick="filterStockCategory('SIOPAO',this)">SIOPAO</button>
+<button class="cat-btn" onclick="filterStockCategory('EXTRAS',this)">EXTRAS</button>
+</div>
+<div id="productionList" class="stock-grid"></div>
+<button class="btn-small" onclick="showAddProductModal()" style="margin-top:8px;">+ Add New Product</button>
+</div>
+
+<div class="card">
+<h3>Add Expense</h3>
+<input id="expenseItem" placeholder="Item: yelo, uling">
+<input id="expenseAmt" type="number" placeholder="Amount">
+<button class="btn" onclick="addExpense()">Add</button>
+</div>
+
+<div class="card">
+<h3>Products</h3>
+<div class="category-tabs" id="categoryTabs">
+<button class="cat-btn active" onclick="filterCategory('All',this)">All</button>
+<button class="cat-btn" onclick="filterCategory('65\'s',this)">65's</button>
+<button class="cat-btn" onclick="filterCategory('30\'s',this)">30's</button>
+<button class="cat-btn" onclick="filterCategory('BIG SIOMAI',this)">BIG</button>
+<button class="cat-btn" onclick="filterCategory('DUMPLINGS',this)">DUMPLINGS</button>
+<button class="cat-btn" onclick="filterCategory('SIOPAO',this)">SIOPAO</button>
+<button class="cat-btn" onclick="filterCategory('EXTRAS',this)">EXTRAS</button>
+</div>
+<div class="product-grid" id="productGrid"></div>
+</div>
+
+<div class="card">
+<h3>🛒 Cart</h3>
+<div id="cartList"></div>
+<div style="font-size:16px;font-weight:bold;color:#FF6B35;margin:6px 0">Total: ₱<span id="cartTotal">0</span></div>
+<input id="cashAmt" type="number" placeholder="Enter cash amount" style="width:100%;padding:8px">
+<div style="font-size:14px;font-weight:bold;color:#28a745;margin:6px 0">Change: ₱<span id="changeAmt">0</span></div>
+<button class="btn checkout-btn" onclick="checkout()">Checkout + Print</button>
+</div>
+
+<div id="receiptPrint"></div>
+
+<div id="addProductModal" class="modal">
+<div class="modal-content">
+<h3>➕ Add New Product</h3>
+<input id="newProductName" placeholder="Product Name: mini ASADO">
+<select id="newProductCat">
+<option value="65's">65's</option>
+<option value="30's">30's</option>
+<option value="BIG SIOMAI">BIG SIOMAI</option>
+<option value="DUMPLINGS">DUMPLINGS</option>
+<option value="SIOPAO">SIOPAO</option>
+<option value="EXTRAS">EXTRAS</option>
+</select>
+<input id="newProductPrice" type="number" placeholder="Price: 200">
+<input id="newProductStock" type="number" placeholder="Initial Stock: 100">
+<div class="modal-btns">
+<button class="btn" onclick="addNewProduct()">Add Product</button>
+<button class="btn" style="background:#999" onclick="closeAddProductModal()">Cancel</button>
+</div>
+</div>
+</div>
+
+<script>
+var products = [
+  {id:1,name:'Pork 65\'s',price:160,stock:602,cat:'65\'s'},
+  {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
+  {id:3,name:'Beff 65',price:150,stock:100,cat:'65\'s'},
+  {id:5,name:'Pork 30\'s',price:80,stock:93,cat:'30\'s'},
+  {id:6,name:'Chicken 30\'s',price:80,stock:100,cat:'30\'s'},
+  {id:8,name:'Pork Big Siomai',price:120,stock:86,cat:'BIG SIOMAI'},
+  {id:10,name:'Japanese Big Siomai',price:150,stock:100,cat:'BIG SIOMAI'},
+  {id:12,name:'Sharksfin',price:110,stock:92,cat:'DUMPLINGS'},
+  {id:13,name:'Gyoza',price:110,stock:100,cat:'DUMPLINGS'},
+  {id:14,name:'Hakaw',price:280,stock:20,cat:'DUMPLINGS'},
+  {id:27,name:'Jumbo Asado',price:200,stock:50,cat:'SIOPAO'},
+  {id:19,name:'Chili Garlic',price:75,stock:999,cat:'EXTRAS'},
+  {id:28,name:'Siopao Sauce',price:0,stock:999,cat:'EXTRAS'},
+  {id:29,name:'water',price:50,stock:100,cat:'EXTRAS'},
+  {id:30,name:'MINI SIOPAO',price:200,stock:100,cat:'EXTRAS'},
+  {id:31,name:'mini bola bola',price:209,stock:100,cat:'EXTRAS'},
+  {id:32,name:'mini ASADO',price:200,stock:100,cat:'EXTRAS'}
+];
+
+var cart = [];
+var salesData = [];
+var expensesData = [];
+var currentFilter = 'All';
+var currentStockFilter = 'All';
+var lastTransaction = null;
+
+function initApp(){
+  var savedProducts = localStorage.getItem('products');
+  var savedSales = localStorage.getItem('sales');
+  var savedExpenses = localStorage.getItem('expenses');
+  if(savedProducts) products = JSON.parse(savedProducts);
+  if(savedSales) salesData = JSON.parse(savedSales);
+  if(savedExpenses) expensesData = JSON.parse(savedExpenses);
+  renderProducts();
+  renderProduction();
+  updateSummary();
+}
+
+function saveData(){
+  localStorage.setItem('products',JSON.stringify(products));
+  localStorage.setItem('sales',JSON.stringify(salesData));
+  localStorage.setItem('expenses',JSON.stringify(expensesData));
+}
+
+// FIX #1: PRODUCTS TABS - MAY SPACE NA SA SELECTOR
+function filterCategory(cat,el){
+  currentFilter = cat;
+  var tabs = document.querySelectorAll('#categoryTabs.cat-btn');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
+  el.classList.add('active');
+  renderProducts();
+}
+
+// FIX #2: STOCK TABS - MAY SPACE NA RIN
+function filterStockCategory(cat,el){
+  currentStockFilter = cat;
+  var tabs = document.querySelectorAll('#stockCategoryTabs.cat-btn');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
+  el.classList.add('active');
+  renderProduction();
+}
+
+function renderProducts(){
+  var filtered = currentFilter==='All'? products : products.filter(function(p){return p.cat===currentFilter});
+  var html = '';
+  var lastCat = '';
+  for(var i=0;i<filtered.length;i++){
+    var p = filtered[i];
+    if(p.cat!== lastCat && currentFilter==='All'){
+      html += '<div class="cat-header">'+p.cat+'</div>';
+      lastCat = p.cat;
+    }
+    var cartQty = 0;
+    for(var j=0;j<cart.length;j++){
+      if(cart[j].id===p.id){cartQty=cart[j].qty;break;}
+    }
+    html += '<div class="product-item">';
+    html += '<h4>'+p.name+'</h4>';
+    html += '<div class="price">₱'+p.price+'</div>';
+    html += '<div class="qty-control">';
+    html += '<input type="number" class="qty-input" id="qty-'+p.id+'" value="'+(cartQty>0?cartQty:1)+'" min="1" max="'+p.stock+'">';
+    html += '<button class="btn-add-small" onclick="addToCartQty('+p.id+')" '+(p.stock<=0?'disabled':'')+'>+Add</button>';
+    html += '</div></div>';
+  }
+  document.getElementById('productGrid').innerHTML = html;
+}
+
+function addToCartQty(id){
+  var p = null;
+  for(var i=0;i<products.length;i++){
+    if(products[i].id===id){p=products[i];break;}
+  }
+  if(!p || p.stock<=0){alert('Out of stock!');return}
+
+  var qtyInput = document.getElementById('qty-'+id);
+  var addQty = parseInt(qtyInput.value)||1;
+
+  if(addQty<=0){alert('Enter valid quantity!');return}
+  if(addQty>p.stock){alert('Not enough stock! Available: '+p.stock);return}
+
+  p.stock -= addQty;
+  var item = null;
+  for(var i=0;i<cart.length;i++){
+    if(cart[i].id===id){item=cart[i];break;}
+  }
+  if(item){
+    item.qty+=addQty;
+  }else{
+    cart.push({id:p.id,name:p.name,price:p.price,qty:addQty});
+  }
+
+  qtyInput.value = 1;
+  saveData();
+  renderCart();
+  renderProducts();
+  renderProduction();
+}
+
+function renderCart(){
+  var html = '';
+  for(var i=0;i<cart.length;i++){
+    var item = cart[i];
+    html += '<div class="cart-item">';
+    html += '<span>'+item.name+' x'+item.qty+'</span>';
+    html += '<span>₱'+(item.price*item.qty)+' <button onclick="removeFromCart('+item.id+')" style="background:red;color:white;border:none;padding:2px 5px;border-radius:3px;margin-left:5px">X</button></span>';
+    html += '</div>';
+  }
+  document.getElementById('cartList').innerHTML = html;
+  updateTotal();
+}
+
+function removeFromCart(id){
+  for(var i=0;i<cart.length;i++){
+    if(cart[i].id===id){
+      var p = null;
+      for(var j=0;j<products.length;j++){
+        if(products[j].id===id){p=products[j];break;}
+      }
+      if(p) p.stock += cart[i].qty;
+      cart.splice(i,1);
+      break;
+    }
+  }
+  saveData();
+  renderCart();
+  renderProducts();
+  renderProduction();
+}
+
+function updateTotal(){
+  var total = 0;
+  for(var i=0;i<cart.length;i++) total += cart[i].price*cart[i].qty;
+  document.getElementById('cartTotal').textContent = total.toFixed(2);
+  var cash = parseFloat(document.getElementById('cashAmt').value)||0;
+  document.getElementById('changeAmt').textContent = Math.max(0,cash-total).toFixed(2);
+}
+
+document.getElementById('cashAmt').addEventListener('input',updateTotal);
+
+function checkout(){
+  if(cart.length===0){alert('Cart is empty!');return}
+  var total = 0;
+  for(var i=0;i<cart.length;i++) total += cart[i].price*cart[i].qty;
+  var cash = parseFloat(document.getElementById('cashAmt').value)||0;
+  if(cash<total){alert('Insufficient cash!');return}
+
+  var transaction = {
+    id:Date.now(),
+    date:new Date().toLocaleString(),
+    items:cart.slice(),
+    total:total,
+    cash:cash,
+    change:cash-total
+  };
+
+  salesData.push(transaction);
+  lastTransaction = transaction;
+  saveData();
+
+  cart = [];
+  document.getElementById('cashAmt').value = '';
+  renderCart();
+  renderProducts();
+  renderProduction();
+  updateSummary();
+  printReceipt();
+}
+
+function printReceipt(){
+  if(!lastTransaction){alert('No transaction to print!');return}
+  var t = lastTransaction;
+  var itemsHtml = '';
+  for(var i=0;i<t.items.length;i++){
+    var it = t.items[i];
+    itemsHtml += '<div style="display:flex;justify-content:space-between;font-size:10px;margin:1px 0;"><span>'+it.name+' x'+it.qty+'</span><span>₱'+(it.price*it.qty)+'</span></div>';
+  }
+
+  var receipt =
+    '<div style="text-align:center;font-weight:bold;font-size:12px;">ONE SIOMAI</div>'+
+    '<div style="text-align:center;font-size:10px;">Valenzuela City</div>'+
+    '<div style="text-align:center;font-size:9px;border-bottom:1px dashed #000;margin:2px 0;padding-bottom:2px;">'+t.date+'</div>'+
+    itemsHtml+
+    '<div style="border-top:1px dashed #000;margin-top:2px;padding-top:2px;font-size:10px;">'+
+    '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>TOTAL:</span><span>₱'+t.total.toFixed(0)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;"><span>CASH:</span><span>₱'+t.cash.toFixed(0)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>CHANGE:</span><span>₱'+t.change.toFixed(0)+'</span></div>'+
+    '</div>'+
+    '<div style="text-align:center;margin-top:4px;border-top:1px dashed #000;padding-top:2px;font-size:10px;">Thank you!</div>';
+
+  var receiptDiv = document.getElementById('receiptPrint');
+  receiptDiv.innerHTML = receipt;
+
+  setTimeout(function(){
+    window.print();
+  },300);
+}
+
+function renderProduction(){
+  var filtered = currentStockFilter==='All'? products : products.filter(function(p){return p.cat===currentStockFilter});
+  var html = '';
+  var lastCat = '';
+  for(var i=0;i<filtered.length;i++){
+    var p = filtered[i];
+    if(p.cat!== lastCat && currentStockFilter==='All'){
+      html += '<div class="cat-header">'+p.cat+'</div>';
+      lastCat = p.cat;
+    }
+    html += '<div class="stock-item">';
+    html += '<div class="stock-item-name">'+p.name+'</div>';
+    html += '<div class="stock-item-price">₱'+p.price+'</div>';
+    html += '<div class="stock-item-qty">Stock: '+p.stock+'</div>';
+    html += '<input type="number" class="stock-input" id="prod-'+p.id+'" placeholder="+Stock" min="1">';
+    html += '<input type="number" class="price-input" id="price-'+p.id+'" value="'+p.price+'" min="0">';
+    html += '<div class="btn-group">';
+    html += '<button class="btn-production" onclick="addProduction('+p.id+')">+Stock</button>';
+    html += '<button class="btn-price" onclick="updatePrice('+p.id+')">₱Price
