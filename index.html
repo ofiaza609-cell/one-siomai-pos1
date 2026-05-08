@@ -38,15 +38,12 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .qty-input { width: 35px; padding: 4px; text-align: center; border: none; border-radius: 4px; font-size: 11px; font-weight: bold; background: #FF6B35; color: white; }
 .btn-add-small { flex: 1; background: #FF6B35; color: white; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 .btn-add-small:disabled { background: #ccc; }
-
-/* STOCK 3x3 GRID STYLE */
 .stock-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; max-height: 250px; overflow-y: auto; }
 .stock-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; background: #fafafa; text-align: center; }
 .stock-item-name { font-size: 10px; font-weight: 600; margin-bottom: 2px; height: 24px; display: flex; align-items: center; justify-content: center; }
 .stock-item-price { font-size: 12px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
 .stock-item-qty { font-size: 11px; color: #666; margin-bottom: 3px; }
 .stock-input { width: 100%; padding: 3px; text-align: center; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; margin-bottom: 3px; }
-
 .hidden { display: none; }
 @media print {
   body * { visibility: hidden; }
@@ -102,40 +99,25 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 <div style="font-size:16px;font-weight:bold;color:#FF6B35;margin:6px 0">Total: ₱<span id="cartTotal">0</span></div>
 <input id="cashAmt" type="number" placeholder="Enter cash amount" style="width:100%;padding:8px">
 <div style="font-size:14px;font-weight:bold;color:#28a745;margin:6px 0">Change: ₱<span id="changeAmt">0</span></div>
-<button class="btn checkout-btn" onclick="checkout()">Checkout</button>
-<button class="btn-print" onclick="printReceipt()">🖨️ PRINT RECEIPT</button>
+<button class="btn checkout-btn" onclick="checkout()">Checkout + Print</button>
 </div>
 
 <div id="receiptPrint" class="hidden" style="padding:20px;font-family:monospace;font-size:12px;max-width:300px;margin:0 auto"></div>
 
 <script>
+// UPDATED PRODUCTS - MATCH SA RESIBO MO BOSS
 var products = [
   {id:1,name:'Pork 65\'s',price:150,stock:105,cat:'65\'s'},
-  {id:2,name:'Beef 65\'s',price:150,stock:100,cat:'65\'s'},
-  {id:3,name:'Chicken 65\'s',price:150,stock:94,cat:'65\'s'},
-  {id:4,name:'Japanese 65\'s',price:150,stock:94,cat:'65\'s'},
-  {id:16,name:'Shrimp 65\'s',price:150,stock:100,cat:'65\'s'},
+  {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
   {id:5,name:'Pork 30\'s',price:80,stock:93,cat:'30\'s'},
-  {id:6,name:'Beef 30\'s',price:80,stock:100,cat:'30\'s'},
-  {id:7,name:'Chicken 30\'s',price:80,stock:100,cat:'30\'s'},
-  {id:17,name:'Japanese 30\'s',price:120,stock:89,cat:'30\'s'},
-  {id:8,name:'BIG Pork',price:120,stock:86,cat:'BIG SIOMAI'},
-  {id:9,name:'BIG Beef',price:120,stock:97,cat:'BIG SIOMAI'},
-  {id:10,name:'BIG Japanese',price:150,stock:100,cat:'BIG SIOMAI'},
-  {id:11,name:'BIG Chicken',price:120,stock:100,cat:'BIG SIOMAI'},
-  {id:12,name:'Sharksfin',price:80,stock:92,cat:'DUMPLINGS'},
-  {id:13,name:'Gyoza',price:80,stock:100,cat:'DUMPLINGS'},
-  {id:18,name:'Hakaw',price:100,stock:100,cat:'DUMPLINGS'},
-  {id:14,name:'Asado Siopao',price:35,stock:60,cat:'SIOPAO'},
-  {id:15,name:'Bola-Bola',price:35,stock:60,cat:'SIOPAO'},
-  {id:22,name:'Chicken Siopao',price:35,stock:60,cat:'SIOPAO'},
-  {id:23,name:'Combi Siopao',price:40,stock:60,cat:'SIOPAO'},
-  {id:24,name:'Mini Asado',price:20,stock:100,cat:'SIOPAO'},
-  {id:25,name:'Mini Bola-Bola',price:20,stock:100,cat:'SIOPAO'},
-  {id:19,name:'Chili Garlic',price:5,stock:999,cat:'EXTRAS'},
-  {id:20,name:'Toyomansi',price:5,stock:999,cat:'EXTRAS'},
-  {id:21,name:'Extra Rice',price:15,stock:200,cat:'EXTRAS'},
-  {id:26,name:'Chili Oil',price:10,stock:200,cat:'EXTRAS'}
+  {id:6,name:'Chicken 30\'s',price:80,stock:100,cat:'30\'s'},
+  {id:8,name:'Pork Big Siomai',price:120,stock:86,cat:'BIG SIOMAI'},
+  {id:10,name:'Japanese Big Siomai',price:150,stock:100,cat:'BIG SIOMAI'},
+  {id:12,name:'Sharksfin',price:110,stock:92,cat:'DUMPLINGS'},
+  {id:13,name:'Gyoza',price:110,stock:100,cat:'DUMPLINGS'},
+  {id:27,name:'Jumbo Asado',price:200,stock:50,cat:'SIOPAO'},
+  {id:19,name:'Chili Garlic',price:75,stock:999,cat:'EXTRAS'},
+  {id:28,name:'Siopao Sauce',price:0,stock:999,cat:'EXTRAS'}
 ];
 
 var cart = [];
@@ -144,16 +126,13 @@ var expensesData = [];
 var currentFilter = 'All';
 var lastTransaction = null;
 
-// FIX: LOAD SAVED DATA FIRST BAGO RENDER
 function initApp(){
   var savedProducts = localStorage.getItem('products');
   var savedSales = localStorage.getItem('sales');
   var savedExpenses = localStorage.getItem('expenses');
-
   if(savedProducts) products = JSON.parse(savedProducts);
   if(savedSales) salesData = JSON.parse(savedSales);
   if(savedExpenses) expensesData = JSON.parse(savedExpenses);
-
   renderProducts();
   renderProduction();
   updateSummary();
@@ -205,9 +184,7 @@ function addToCartQty(id){
     if(products[i].id===id){p=products[i];break;}
   }
   if(!p || p.stock<=0){alert('Out of stock!');return}
-
   p.stock -= 1;
-
   var item = null;
   for(var i=0;i<cart.length;i++){
     if(cart[i].id===id){item=cart[i];break;}
@@ -217,7 +194,6 @@ function addToCartQty(id){
   }else{
     cart.push({id:p.id,name:p.name,price:p.price,qty:1});
   }
-
   saveData();
   renderCart();
   renderProducts();
@@ -265,6 +241,7 @@ function updateTotal(){
 
 document.getElementById('cashAmt').addEventListener('input',updateTotal);
 
+// FIX #1: AUTO-PRINT PAG CHECKOUT
 function checkout(){
   if(cart.length===0){alert('Cart is empty!');return}
   var total = 0;
@@ -291,7 +268,9 @@ function checkout(){
   renderProducts();
   renderProduction();
   updateSummary();
-  alert('Transaction saved! Change: ₱'+(cash-total).toFixed(2));
+
+  // AUTO-PRINT RESIBO AGAD
+  printReceipt();
 }
 
 function printReceipt(){
@@ -300,30 +279,28 @@ function printReceipt(){
   var itemsHtml = '';
   for(var i=0;i<t.items.length;i++){
     var it = t.items[i];
-    itemsHtml += '<tr><td>'+it.name+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right">₱'+it.price+'</td><td style="text-align:right">₱'+(it.price*it.qty).toFixed(2)+'</td></tr>';
+    itemsHtml += '<tr><td>'+it.name+' x'+it.qty+'</td><td style="text-align:right">₱'+(it.price*it.qty)+'</td></tr>';
   }
 
   document.getElementById('receiptPrint').innerHTML =
     '<div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px">'+
     '<h2 style="margin:0">ONE SIOMAI</h2>'+
-    '<p style="margin:5px 0">POS Receipt</p>'+
+    '<p style="margin:5px 0">Valenzuela City</p>'+
     '<p style="margin:0;font-size:10px">'+t.date+'</p></div>'+
     '<table style="width:100%;border-collapse:collapse;margin-bottom:10px">'+
-    '<tr style="border-bottom:1px solid #000"><th style="text-align:left">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'+
     itemsHtml+'</table>'+
     '<div style="border-top:2px dashed #000;padding-top:10px">'+
-    '<div style="display:flex;justify-content:space-between;font-size:14px"><span>SUBTOTAL:</span><span>₱'+t.total.toFixed(2)+'</span></div>'+
-    '<div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱'+t.cash.toFixed(2)+'</span></div>'+
-    '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px"><span>CHANGE:</span><span>₱'+t.change.toFixed(2)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:14px"><span>TOTAL:</span><span>₱'+t.total.toFixed(0)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱'+t.cash.toFixed(0)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-weight:bold"><span>CHANGE:</span><span>₱'+t.change.toFixed(0)+'</span></div>'+
     '</div><div style="text-align:center;margin-top:15px;border-top:2px dashed #000;padding-top:10px">'+
-    '<p style="margin:0">Thank you!</p><p style="margin:5px 0;font-size:10px">Please come again</p></div>';
+    '<p style="margin:0">Thank you!</p></div>';
 
   document.getElementById('receiptPrint').classList.remove('hidden');
   window.print();
   setTimeout(function(){document.getElementById('receiptPrint').classList.add('hidden')},100);
 }
 
-// STOCK 3x3 GRID + DAILY PRODUCTION
 function renderProduction(){
   var html = '';
   for(var i=0;i<products.length;i++){
@@ -343,7 +320,6 @@ function addProduction(id){
   var input = document.getElementById('prod-'+id);
   var addQty = parseInt(input.value)||0;
   if(addQty<=0){alert('Enter valid quantity!');return}
-
   for(var i=0;i<products.length;i++){
     if(products[i].id===id){
       products[i].stock += addQty;
@@ -417,16 +393,6 @@ function resetAllData(){
 function printReport(){
   alert('Printing report...');
   window.print();
-}
-
-function manualBackup(){
-  var data = {products:products,sales:salesData,expenses:expensesData};
-  var blob = new Blob([JSON.stringify(data)],{type:'application/json'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'siomai-backup-'+Date.now()+'.json';
-  a.click();
 }
 
 initApp();
