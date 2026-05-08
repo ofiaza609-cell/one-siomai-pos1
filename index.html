@@ -29,7 +29,6 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .product-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; text-align: center; position: relative; }
 .product-item h4 { font-size: 11px; margin-bottom: 2px; font-weight: 600; }
 .product-item.price { font-size: 14px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
-/* TINANGGAL NA GREEN BADGE */
 .stock-badge { display: none; }
 .cart-item { display: flex; justify-content: space-between; margin: 4px 0; align-items: center; font-size: 14px; }
 .checkout-btn { width: 100%; margin-top: 8px; padding: 12px; font-size: 15px; }
@@ -47,20 +46,31 @@ input { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; p
 .price-input { width: 100%; padding: 3px; text-align: center; border: 1px solid #FF9800; border-radius: 3px; font-size: 10px; margin-bottom: 3px; }
 .btn-group { display: flex; }
 .hidden { display: none; }
+
+/* FIX: FORCED 58MM - 1 PAGE LANG */
 @media print {
-  @page { size: 58mm auto; margin: 0; }
-  body { margin: 0; padding: 0; }
-  body * { visibility: hidden; }
-  #receiptPrint, #receiptPrint * { visibility: visible; }
+  @page {
+    size: 58mm auto!important;
+    margin: 0!important;
+  }
+  html, body {
+    width: 58mm!important;
+    height: auto!important;
+    margin: 0!important;
+    padding: 0!important;
+  }
+  body * { visibility: hidden!important; }
+  #receiptPrint, #receiptPrint * { visibility: visible!important; }
   #receiptPrint {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 58mm;
-    padding: 3mm;
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    line-height: 1.2;
+    position: absolute!important;
+    left: 0!important;
+    top: 0!important;
+    width: 58mm!important;
+    padding: 2mm!important;
+    font-family: 'Courier New', monospace!important;
+    font-size: 10px!important;
+    line-height: 1.1!important;
+    background: white!important;
   }
 }
 </style>
@@ -290,34 +300,33 @@ function checkout(){
   printReceipt();
 }
 
-// FIX #1: PRINT FIX - MAY CONTENT NA BAGO MAG PRINT
 function printReceipt(){
   if(!lastTransaction){alert('No transaction to print!');return}
   var t = lastTransaction;
   var itemsHtml = '';
   for(var i=0;i<t.items.length;i++){
     var it = t.items[i];
-    itemsHtml += '<div style="display:flex;justify-content:space-between;"><span>'+it.name+' x'+it.qty+'</span><span>₱'+(it.price*it.qty)+'</span></div>';
+    itemsHtml += '<div style="display:flex;justify-content:space-between;font-size:9px;"><span>'+it.name+' x'+it.qty+'</span><span>₱'+(it.price*it.qty)+'</span></div>';
   }
 
   var receipt =
-    '<div style="text-align:center;font-weight:bold;">ONE SIOMAI</div>'+
-    '<div style="text-align:center;">Valenzuela City</div>'+
-    '<div style="text-align:center;border-bottom:1px dashed #000;margin:5px 0;padding-bottom:5px;">'+t.date+'</div>'+
+    '<div style="text-align:center;font-weight:bold;font-size:11px;">ONE SIOMAI</div>'+
+    '<div style="text-align:center;font-size:9px;">Valenzuela City</div>'+
+    '<div style="text-align:center;font-size:8px;border-bottom:1px dashed #000;margin:3px 0;padding-bottom:3px;">'+t.date+'</div>'+
     itemsHtml+
-    '<div style="border-top:1px dashed #000;margin-top:5px;padding-top:5px;">'+
+    '<div style="border-top:1px dashed #000;margin-top:3px;padding-top:3px;font-size:9px;">'+
     '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>TOTAL:</span><span>₱'+t.total.toFixed(0)+'</span></div>'+
     '<div style="display:flex;justify-content:space-between;"><span>CASH:</span><span>₱'+t.cash.toFixed(0)+'</span></div>'+
     '<div style="display:flex;justify-content:space-between;font-weight:bold;"><span>CHANGE:</span><span>₱'+t.change.toFixed(0)+'</span></div>'+
     '</div>'+
-    '<div style="text-align:center;margin-top:8px;border-top:1px dashed #000;padding-top:5px;">Thank you!</div>';
+    '<div style="text-align:center;margin-top:5px;border-top:1px dashed #000;padding-top:3px;font-size:9px;">Thank you!</div>';
 
   var receiptDiv = document.getElementById('receiptPrint');
   receiptDiv.innerHTML = receipt;
 
   setTimeout(function(){
     window.print();
-  },200);
+  },300);
 }
 
 function renderProduction(){
