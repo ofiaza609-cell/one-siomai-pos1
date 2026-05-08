@@ -252,4 +252,262 @@
         html += '<div class="stock-item">';
         html += '<div class="stock-header"><h4>'+p.name+'</h4>';
         html += '<span class="stock-badge '+(p.stock<=10?'low':'')+'">Stock: '+p.stock+'</span></div>';
-        html += '<div class="stock-row">
+        html += '<div class="stock-row"><span class="label">Price:</span>';
+        html += '<input type="number" class="price-input" value="'+p.price+'" onblur="updatePrice('+p.id+',this.value)"></div>';
+        html += '<div class="stock-row"><span class="label">Add Production:</span>';
+        html += '<div style="display:flex;gap:5px;align-items:center">';
+        html += '<input type="number" class="add-prod-input" id="prod-'+p.id+'" placeholder="0" min="0">';
+        html += '<button class="btn-add-stock" onclick="addProduction('+p.id+')">+ ADD</button>';
+        html += '</div></div></div>';
+      }
+      document.getElementById('stockList').innerHTML = html;
+    }
+
+    function updatePrice(id,val){
+      for(var i=0;i<products.length;i++){
+        if(products[i].id===id){
+          products[i].price = parseInt(val)||0;
+          break;
+        }
+      }
+      saveData();
+      renderProducts();
+      renderStock();
+    }
+
+    function addProduction(id){
+      var input = document.getElementById('prod-'+id);
+      var qty = parseInt(input.value)||0;
+      if(qty<=0){alert('Enter valid quantity!');return}
+      for(var i=0;i<products.length;i++){
+        if(products[i].id===id){
+          products[i].stock += qty;
+          saveData();
+          renderProducts();
+          renderStock();
+          input.value = '';
+          alert('Added '+qty+' pcs to '+products[i].name+'! New Stock: '+products[i].stock);
+          break;
+        }
+      }
+    }
+
+    function addToCartQty(id){
+      var qtyInput = document.getElementById('qty-'+id);
+      var qty = parseInt(qtyInput.value)||1;
+      var p = null;
+      for(var i=0;i<products.length;i++){
+        if(products[i].id===id){p=products[i];break;}
+      }
+      if(!p || p.stock<=0){alert('Out of stock!');return}
+      if(qty>p.stock){alert('Only '+p.stock+' pcs available!');qtyInput.value=p.stock;return}
+
+      p.stock -= qty;
+
+      var item = null;
+      for(var i=0;i<cart.length;i++){
+        if(cart[i].id===id){item=cart[i];break;}
+      }
+      if(item){
+        item.qty+=qty;
+      }else{
+        cart.push({id:p.id,name:p.name,price:p.price,qty:qty});
+      }
+
+      saveData();
+      renderCart();
+      renderProducts();
+      renderStock();
+
+      var newQty = Math.min(p.stock, qty + 1);
+      qtyInput.value = newQty;
+      qtyInput.max = p.stock;
+      if(p.stock<=0) qtyInput.value = 0;
+    }
+
+    function removeFromCart(id){
+      for(var i=0;i<cart.length;i++){
+        if(cart[i].id===id){
+          var p = null;
+          for(var j=0;j<products.length;j++){
+            if(products[j].id===id){p=products[j];break;}
+          }
+          if(p) p.stock += cart[i].qty;
+          saveData();
+          renderProducts();
+          renderStock();
+          cart.splice(i,1);
+          break;
+        }
+      }
+      renderCart();
+    }
+
+    function renderCart(){
+      var html = '';
+      for(var i=0;i<cart.length;i++){
+        var item = cart[i];
+        html += '<div class="cart-item">';
+        html += '<span>'+item.name+' x'+item.qty+'</span>';
+        html += '<span>₱'+(item.price*item.qty)+' <button onclick="removeFromCart('+item.id+')" style="background:red;color:white;border:none;padding:2px 5px;border-radius:3px;margin-left:5px">X</button></span>';
+        html += '</div>';
+      }
+      document.getElementById('cartItems').innerHTML = html;
+      updateTotal();
+    }
+
+    function updateTotal(){
+      var total = 0;
+      for(var i=0;i<cart.length;i++) total += cart[i].price*cart[i].qty;
+      document.getElementById('cartTotal').textContent = total;
+      var cash = parseFloat(document.getElementById('cashAmount').value)||0;
+      document.getElementById('changeAmount').textContent = Math.max(0,cash-total);
+    }
+
+    document.getElementById('cashAmount').addEventListener('input',updateTotal);
+
+    function checkout(){
+      if(cart.length===0){alert('Cart is empty!');return}
+      var total = 0;
+      for(var i=0;i<cart.length;i++) total += cart[i].price*cart[i].qty;
+      var cash = parseFloat(document.getElementById('cashAmount').value)||0;
+      if(cash<total){alert('Insufficient cash!');return}
+
+      var transaction = {
+        id:Date.now(),
+        date:new Date().toLocaleString(),
+        items:cart.slice(),
+        total:total,
+        cash:cash,
+        change:cash-total
+      };
+
+      sales.push(transaction);
+      lastTransaction = transaction;
+      saveData();
+
+      cart = [];
+      document.getElementById('cashAmount').value = '';
+      renderCart();
+      renderProducts();
+      renderStock();
+      updateSales();
+      alert('Transaction saved! Change: ₱'+(cash-total));
+    }
+
+    function printReceipt(){
+      if(!lastTransaction){alert('No transaction to print!');return}
+      var t = lastTransaction;
+      var itemsHtml = '';
+      for(var i=0;i<t.items.length;i++){
+        var it = t.items[i];
+        itemsHtml += '<tr><td>'+it.name+'</td><td style="text-align:center">'+it.qty+'</td><td style="text-align:right">₱'+it.price+'</td><td style="text-align:right">₱'+(it.price*it.qty)+'</td></tr>';
+      }
+
+      document.getElementById('receiptPrint').innerHTML =
+        '<div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px">'+
+        '<h2 style="margin:0">ONE SIOMAI</h2>'+
+        '<p style="margin:5px 0">POS Receipt</p>'+
+        '<p style="margin:0;font-size:10px">'+t.date+'</p></div>'+
+        '<table style="width:100%;border-collapse:collapse;margin-bottom:10px">'+
+        '<tr style="border-bottom:1px solid #000"><th style="text-align:left">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'+
+        itemsHtml+'</table>'+
+        '<div style="border-top:2px dashed #000;padding-top:10px">'+
+        '<div style="display:flex;justify-content:space-between;font-size:14px"><span>SUBTOTAL:</span><span>₱'+t.total+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱'+t.cash+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px"><span>CHANGE:</span><span>₱'+t.change+'</span></div>'+
+        '</div><div style="text-align:center;margin-top:15px;border-top:2px dashed #000;padding-top:10px">'+
+        '<p style="margin:0">Thank you!</p><p style="margin:5px 0;font-size:10px">Please come again</p></div>';
+
+      document.getElementById('receiptPrint').classList.remove('hidden');
+      window.print();
+      setTimeout(function(){document.getElementById('receiptPrint').classList.add('hidden')},100);
+    }
+
+    function updateSales(){
+      var totalSales = 0;
+      for(var i=0;i<sales.length;i++) totalSales += sales[i].total;
+      var totalExp = 0;
+      for(var i=0;i<expenses.length;i++) totalExp += expenses[i].amount;
+      var items = 0;
+      for(var i=0;i<sales.length;i++){
+        for(var j=0;j<sales[i].items.length;j++) items += sales[i].items[j].qty;
+      }
+      document.getElementById('totalSales').textContent = totalSales;
+      document.getElementById('totalExpenses').textContent = totalExp;
+      document.getElementById('netProfit').textContent = totalSales - totalExp;
+      document.getElementById('itemsSold').textContent = items + ' pcs';
+      document.getElementById('totalTrans').textContent = sales.length;
+
+      var html = '';
+      var recent = sales.slice(-10).reverse();
+      for(var i=0;i<recent.length;i++){
+        var t = recent[i];
+        var itemsStr = '';
+        for(var j=0;j<t.items.length;j++) itemsStr += t.items[j].name+' x'+t.items[j].qty+', ';
+        html += '<div style="background:#f9f9f9;padding:8px;margin:4px 0;border-radius:6px;font-size:12px">';
+        html += '<div style="display:flex;justify-content:space-between;font-weight:bold">';
+        html += '<span>'+t.date+'</span><span>₱'+t.total+'</span></div>';
+        html += '<div style="color:#666;margin-top:4px">'+itemsStr+'</div></div>';
+      }
+      document.getElementById('transList').innerHTML = html;
+    }
+
+    function addExpense(){
+      var desc = document.getElementById('expenseDesc').value.trim();
+      var amount = parseFloat(document.getElementById('expenseAmount').value)||0;
+      if(!desc || amount<=0){alert('Enter valid description and amount!');return}
+
+      expenses.push({
+        id:Date.now(),
+        desc:desc,
+        amount:amount,
+        date:new Date().toLocaleString()
+      });
+      saveData();
+      renderExpenses();
+      updateSales();
+      document.getElementById('expenseDesc').value='';
+      document.getElementById('expenseAmount').value='';
+      alert('Expense added!');
+    }
+
+    function renderExpenses(){
+      var html = '';
+      var recent = expenses.slice(-10).reverse();
+      for(var i=0;i<recent.length;i++){
+        var e = recent[i];
+        html += '<div class="expense-item">';
+        html += '<div><div style="font-weight:bold;font-size:13px">'+e.desc+'</div>';
+        html += '<div style="font-size:11px;color:#666">'+e.date+'</div></div>';
+        html += '<div style="color:#dc3545;font-weight:bold">₱'+e.amount+'</div></div>';
+      }
+      document.getElementById('expenseList').innerHTML = html;
+    }
+
+    function restoreAll(){
+      if(confirm('Restore all stocks to 100?')){
+        for(var i=0;i<products.length;i++) products[i].stock=100;
+        saveData();
+        renderProducts();
+        renderStock();
+      }
+    }
+
+    function deleteZeroStock(){
+      if(confirm('Delete all products with 0 stock?')){
+        var newProducts = [];
+        for(var i=0;i<products.length;i++){
+          if(products[i].stock>0) newProducts.push(products[i]);
+        }
+        products = newProducts;
+        saveData();
+        renderProducts();
+        renderStock();
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
