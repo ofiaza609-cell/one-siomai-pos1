@@ -102,6 +102,9 @@
   <div id="receiptPrint" class="receipt-print hidden" style="padding:20px;font-family:monospace;font-size:12px;max-width:300px;margin:0 auto"></div>
 
   <script>
+    // FORCE RESET OLD DATA - Para lumabas si BIG Chicken
+    localStorage.removeItem('products');
+    
     let products = [
       {id:1,name:'Pork Siomai',price:65,stock:100,cat:'65'},
       {id:2,name:'Beef Siomai',price:65,stock:100,cat:'65'},
@@ -131,11 +134,10 @@
     }
 
     function loadData(){
-      let savedProducts = localStorage.getItem('products');
-      if(savedProducts) products = JSON.parse(savedProducts);
       renderProducts();
       renderStock();
       updateSales();
+      saveData();
     }
 
     function showTab(tab){
