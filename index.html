@@ -7,40 +7,47 @@
   <title>One SIOMAi POS</title>
   <style>
     * {margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
-    body {background:#f5f5f5;padding-bottom:80px}
-    .header {background:#FF6B35;color:white;padding:15px;text-align:center;font-size:20px;font-weight:bold;position:sticky;top:0;z-index:100}
-    .tabs {display:flex;background:white;border-bottom:2px solid #eee;position:sticky;top:54px;z-index:99;overflow-x:auto}
-    .tab {flex:1;padding:12px;text-align:center;cursor:pointer;border-bottom:3px solid transparent;font-size:13px;font-weight:bold;white-space:nowrap}
-    .tab.active {color:#FF6B35;border-bottom-color:#FF6B35}
-    .content {padding:15px}
+    body {background:#f5f5f5;padding-bottom:70px}
+    .header {background:#FF6B35;color:white;padding:15px;text-align:center;font-size:18px;font-weight:bold;position:sticky;top:0;z-index:100}
+    .main-tabs {display:flex;background:white;border-bottom:2px solid #eee;position:sticky;top:52px;z-index:99}
+    .main-tab {flex:1;padding:14px;text-align:center;cursor:pointer;font-size:15px;font-weight:600;color:#666;border-bottom:3px solid transparent}
+    .main-tab.active {color:#FF6B35;border-bottom-color:#FF6B35}
+    .content {padding:10px}
     .section {display:none}
     .section.active {display:block}
-    .product {background:white;border-radius:8px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
-    .product-info h3 {font-size:15px;margin-bottom:4px}
-    .product-info p {color:#666;font-size:13px}
-    .product-price {font-size:18px;font-weight:bold;color:#FF6B35;margin:0 10px}
-    .btn-add {background:#FF6B35;color:white;border:none;padding:8px 16px;border-radius:6px;font-weight:bold;cursor:pointer}
+    .filter-tabs {display:flex;gap:8px;margin:10px 0 15px 0;overflow-x:auto;padding-bottom:5px}
+    .filter-tab {padding:8px 16px;background:white;border:2px solid #ddd;border-radius:20px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer}
+    .filter-tab.active {background:#FF6B35;color:white;border-color:#FF6B35}
+    .product-grid {display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .product-card {background:white;border-radius:12px;padding:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);text-align:center}
+    .product-card h3 {font-size:14px;margin-bottom:4px;font-weight:600}
+    .product-card .cat {font-size:11px;color:#999;margin-bottom:8px}
+    .product-card .price {font-size:20px;font-weight:bold;color:#FF6B35;margin:8px 0}
+    .product-card .stock {font-size:12px;color:#666;margin-bottom:10px}
+    .btn-add {width:100%;background:#FF6B35;color:white;border:none;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:13px}
     .btn-add:active {background:#e55a28}
-    .btn-add:disabled {background:#ccc}
-    .cart {position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #FF6B35;padding:15px;max-height:50vh;overflow-y:auto;z-index:200}
-    .cart-title {font-weight:bold;margin-bottom:10px;font-size:16px}
-    .cart-item {display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:14px}
-    .cart-total {font-size:20px;font-weight:bold;color:#FF6B35;margin:10px 0}
-    .cash-input {width:100%;padding:10px;border:2px solid #ddd;border-radius:6px;font-size:16px;margin:8px 0}
-    .btn-checkout {width:100%;background:#FF6B35;color:white;border:none;padding:14px;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:5px}
+    .btn-add:disabled {background:#ccc;color:#888}
+    .cart {position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #FF6B35;padding:12px;max-height:45vh;overflow-y:auto;z-index:200}
+    .cart-title {font-weight:bold;margin-bottom:8px;font-size:15px}
+    .cart-item {display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:13px}
+    .cart-total {font-size:18px;font-weight:bold;color:#FF6B35;margin:8px 0}
+    .cash-input {width:100%;padding:10px;border:2px solid #ddd;border-radius:6px;font-size:15px;margin:6px 0}
+    .btn-checkout {width:100%;background:#FF6B35;color:white;border:none;padding:12px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:4px}
     .btn-checkout:active {background:#e55a28}
-    .btn-print {width:100%;background:#28a745;color:white;border:none;padding:14px;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px}
+    .btn-print {width:100%;background:#28a745;color:white;border:none;padding:12px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:6px}
     .btn-print:active {background:#218838}
-    .change {font-size:18px;font-weight:bold;color:#28a745;margin:10px 0}
-    .stock-item {background:white;padding:12px;margin:8px 0;border-radius:6px}
+    .change {font-size:16px;font-weight:bold;color:#28a745;margin:8px 0}
+    .stock-item {background:white;padding:12px;margin:8px 0;border-radius:8px}
     .stock-row {display:flex;justify-content:space-between;align-items:center;margin:6px 0}
-    .stock-input {width:70px;padding:6px;text-align:center;border:2px solid #ddd;border-radius:4px;font-size:14px}
-    .price-input {width:70px;padding:6px;text-align:center;border:2px solid #FF6B35;border-radius:4px;font-size:14px;font-weight:bold;color:#FF6B35}
+    .stock-input {width:80px;padding:8px;text-align:center;border:2px solid #ddd;border-radius:6px;font-size:14px}
+    .price-input {width:80px;padding:8px;text-align:center;border:2px solid #FF6B35;border-radius:6px;font-size:14px;font-weight:bold;color:#FF6B35}
     .sales-box {background:white;padding:15px;border-radius:8px;margin-bottom:15px}
     .sales-row {display:flex;justify-content:space-between;padding:8px 0;font-size:15px}
     .sales-total {font-size:24px;font-weight:bold;color:#FF6B35}
     .hidden {display:none}
     .label {font-size:12px;color:#666;margin-right:5px}
+    .bottom-actions {position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);display:flex;padding:8px;gap:8px;z-index:300}
+    .bottom-btn {flex:1;background:#555;color:white;border:none;padding:10px;border-radius:6px;font-size:12px}
     @media print {
       body * {visibility:hidden}
       .receipt-print, .receipt-print * {visibility:visible}
@@ -51,33 +58,32 @@
 <body>
   <div class="header">🥟 One SIOMAi POS</div>
   
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('products',this)">PRODUCTS</div>
-    <div class="tab" onclick="showTab('stock',this)">STOCK</div>
-    <div class="tab" onclick="showTab('sales',this)">SALES</div>
-    <div class="tab" onclick="showTab('expenses',this)">EXPENSES</div>
+  <div class="main-tabs">
+    <div class="main-tab active" onclick="showMainTab('pos',this)">POS</div>
+    <div class="main-tab" onclick="showMainTab('inventory',this)">Inventory</div>
+    <div class="main-tab" onclick="showMainTab('summary',this)">Summary</div>
   </div>
 
   <div class="content">
-    <div id="products" class="section active">
-      <div class="tabs" style="top:0;margin:-15px -15px 15px -15px">
-        <div class="tab active" onclick="filterProducts('all',this)">All</div>
-        <div class="tab" onclick="filterProducts('65',this)">65's</div>
-        <div class="tab" onclick="filterProducts('30',this)">30's</div>
-        <div class="tab" onclick="filterProducts('big',this)">BIG</div>
-        <div class="tab" onclick="filterProducts('dumpling',this)">DUMPLINGS</div>
-        <div class="tab" onclick="filterProducts('siop',this)">SIOPAO</div>
-        <div class="tab" onclick="filterProducts('extras',this)">EXTRAS</div>
+    <div id="pos" class="section active">
+      <div class="filter-tabs">
+        <div class="filter-tab active" onclick="filterProducts('all',this)">All</div>
+        <div class="filter-tab" onclick="filterProducts('65',this)">65's</div>
+        <div class="filter-tab" onclick="filterProducts('30',this)">30's</div>
+        <div class="filter-tab" onclick="filterProducts('big',this)">BIG SIOMAI</div>
+        <div class="filter-tab" onclick="filterProducts('dumpling',this)">DUMPLINGS</div>
+        <div class="filter-tab" onclick="filterProducts('siop',this)">SIOPAO</div>
+        <div class="filter-tab" onclick="filterProducts('extras',this)">EXTRAS</div>
       </div>
-      <div id="productList"></div>
+      <div id="productGrid" class="product-grid"></div>
     </div>
 
-    <div id="stock" class="section">
+    <div id="inventory" class="section">
       <h3 style="margin-bottom:10px">Update Stock & Price</h3>
       <div id="stockList"></div>
     </div>
 
-    <div id="sales" class="section">
+    <div id="summary" class="section">
       <div class="sales-box">
         <div class="sales-row"><span>Total Sales:</span><span class="sales-total">₱<span id="totalSales">0</span></span></div>
         <div class="sales-row"><span>Items Sold:</span><span id="itemsSold">0 pcs</span></div>
@@ -87,10 +93,6 @@
         <h3 style="margin-bottom:10px">Today's Transactions</h3>
         <div id="transList"></div>
       </div>
-    </div>
-
-    <div id="expenses" class="section">
-      <h3>Expenses - Coming Soon</h3>
     </div>
   </div>
 
@@ -104,19 +106,24 @@
     <button class="btn-print" onclick="printReceipt()">🖨️ PRINT RECEIPT</button>
   </div>
 
+  <div class="bottom-actions" id="bottomActions" style="display:none">
+    <button class="bottom-btn" onclick="restoreAll()">↻ Restore</button>
+    <button class="bottom-btn" onclick="deleteZeroStock()">🗑️ Delete</button>
+  </div>
+
   <div id="receiptPrint" class="receipt-print hidden" style="padding:20px;font-family:monospace;font-size:12px;max-width:300px;margin:0 auto"></div>
 
   <script>
     let products = [
-      {id:1,name:'Pork Siomai',price:150,stock:493,cat:'65'},
-      {id:2,name:'Beef Siomai',price:150,stock:149,cat:'65'},
-      {id:3,name:'Chicken Siomai',price:150,stock:499,cat:'65'},
-      {id:4,name:'Japanese Siomai',price:150,stock:150,cat:'65'},
-      {id:16,name:'Shrimp Siomai',price:150,stock:100,cat:'65'},
-      {id:5,name:'Pork Siomai 30s',price:30,stock:100,cat:'30'},
-      {id:6,name:'Beef Siomai 30s',price:30,stock:100,cat:'30'},
-      {id:7,name:'Chicken Siomai 30s',price:30,stock:100,cat:'30'},
-      {id:17,name:'Japanese Siomai 30s',price:120,stock:100,cat:'30'},
+      {id:1,name:'Pork 65\'s',price:150,stock:5,cat:'65'},
+      {id:2,name:'Beef 65\'s',price:150,stock:0,cat:'65'},
+      {id:3,name:'Chicken 65\'s',price:150,stock:0,cat:'65'},
+      {id:4,name:'Japanese 65\'s',price:150,stock:0,cat:'65'},
+      {id:16,name:'Shrimp 65\'s',price:150,stock:0,cat:'65'},
+      {id:5,name:'Pork 30\'s',price:80,stock:0,cat:'30'},
+      {id:6,name:'Beef 30\'s',price:80,stock:0,cat:'30'},
+      {id:7,name:'Chicken 30\'s',price:80,stock:0,cat:'30'},
+      {id:17,name:'Japanese 30\'s',price:120,stock:0,cat:'30'},
       {id:8,name:'BIG Pork',price:120,stock:50,cat:'big'},
       {id:9,name:'BIG Beef',price:120,stock:50,cat:'big'},
       {id:10,name:'BIG Japanese',price:150,stock:50,cat:'big'},
@@ -125,4 +132,230 @@
       {id:13,name:'Gyoza Dumpling',price:80,stock:80,cat:'dumpling'},
       {id:18,name:'Hakaw',price:100,stock:50,cat:'dumpling'},
       {id:14,name:'Asado Siopao',price:35,stock:60,cat:'siop'},
-     
+      {id:15,name:'Bola-Bola Siopao',price:35,stock:60,cat:'siop'},
+      {id:22,name:'Chicken Siopao',price:35,stock:60,cat:'siop'},
+      {id:23,name:'Combi Siopao',price:40,stock:60,cat:'siop'},
+      {id:24,name:'Mini Asado',price:20,stock:100,cat:'siop'},
+      {id:25,name:'Mini Bola-Bola',price:20,stock:100,cat:'siop'},
+      {id:19,name:'Chili Garlic Sauce',price:5,stock:999,cat:'extras'},
+      {id:20,name:'Toyomansi Sauce',price:5,stock:999,cat:'extras'},
+      {id:21,name:'Extra Rice',price:15,stock:200,cat:'extras'},
+      {id:26,name:'Extra Chili Oil',price:10,stock:200,cat:'extras'}
+    ];
+    
+    let cart = [];
+    let sales = JSON.parse(localStorage.getItem('sales') || '[]');
+    let currentFilter = 'all';
+    let lastTransaction = null;
+
+    function saveData(){
+      localStorage.setItem('products',JSON.stringify(products));
+      localStorage.setItem('sales',JSON.stringify(sales));
+    }
+
+    function loadData(){
+      let savedProducts = localStorage.getItem('products');
+      if(savedProducts) {
+        products = JSON.parse(savedProducts);
+      }
+      renderProducts();
+      renderStock();
+      updateSales();
+    }
+
+    function showMainTab(tab,el){
+      document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+      document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      el.classList.add('active');
+      document.getElementById('bottomActions').style.display = tab==='pos' ? 'flex' : 'none';
+    }
+
+    function filterProducts(cat,el){
+      currentFilter = cat;
+      document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active');
+      renderProducts();
+    }
+
+    function renderProducts(){
+      let filtered = currentFilter==='all' ? products : products.filter(p=>p.cat===currentFilter);
+      document.getElementById('productGrid').innerHTML = filtered.map(p=>`
+        <div class="product-card">
+          <h3>${p.name}</h3>
+          <div class="cat">${p.cat.toUpperCase()}S</div>
+          <div class="price">₱${p.price}</div>
+          <div class="stock">Stock: ${p.stock}</div>
+          <button class="btn-add" onclick="addToCart(${p.id})" ${p.stock<=0?'disabled':''}>
+            ${p.stock<=0?'Out of Stock':'+ Add'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderStock(){
+      document.getElementById('stockList').innerHTML = products.map(p=>`
+        <div class="stock-item">
+          <h4 style="margin-bottom:8px">${p.name}</h4>
+          <div class="stock-row">
+            <span class="label">Price:</span>
+            <input type="number" class="price-input" value="${p.price}" onblur="updatePrice(${p.id},this.value)">
+          </div>
+          <div class="stock-row">
+            <span class="label">Stock:</span>
+            <input type="number" class="stock-input" value="${p.stock}" onblur="updateStock(${p.id},this.value)">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updatePrice(id,val){
+      let p = products.find(x=>x.id===id);
+      p.price = parseInt(val)||0;
+      saveData();
+      renderProducts();
+    }
+
+    function updateStock(id,val){
+      let p = products.find(x=>x.id===id);
+      p.stock = parseInt(val)||0;
+      saveData();
+      renderProducts();
+    }
+
+    function addToCart(id){
+      let p = products.find(x=>x.id===id);
+      if(p.stock<=0){alert('Out of stock!');return}
+      let item = cart.find(x=>x.id===id);
+      if(item){item.qty++}else{cart.push({...p,qty:1})}
+      renderCart();
+    }
+
+    function removeFromCart(id){
+      cart = cart.filter(x=>x.id!==id);
+      renderCart();
+    }
+
+    function renderCart(){
+      document.getElementById('cartItems').innerHTML = cart.map(item=>`
+        <div class="cart-item">
+          <span>${item.name} x${item.qty}</span>
+          <span>₱${item.price*item.qty} <button onclick="removeFromCart(${item.id})" style="background:red;color:white;border:none;padding:2px 6px;border-radius:3px;margin-left:5px">X</button></span>
+        </div>
+      `).join('');
+      updateTotal();
+    }
+
+    function updateTotal(){
+      let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+      document.getElementById('cartTotal').textContent = total;
+      let cash = parseFloat(document.getElementById('cashAmount').value)||0;
+      document.getElementById('changeAmount').textContent = Math.max(0,cash-total);
+    }
+
+    document.getElementById('cashAmount').addEventListener('input',updateTotal);
+
+    function checkout(){
+      if(cart.length===0){alert('Cart is empty!');return}
+      let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+      let cash = parseFloat(document.getElementById('cashAmount').value)||0;
+      if(cash<total){alert('Insufficient cash!');return}
+      
+      cart.forEach(item=>{
+        let p = products.find(x=>x.id===item.id);
+        p.stock -= item.qty;
+      });
+      
+      let transaction = {
+        id:Date.now(),
+        date:new Date().toLocaleString(),
+        items:[...cart],
+        total:total,
+        cash:cash,
+        change:cash-total
+      };
+      
+      sales.push(transaction);
+      lastTransaction = transaction;
+      saveData();
+      
+      cart = [];
+      document.getElementById('cashAmount').value = '';
+      renderCart();
+      renderProducts();
+      renderStock();
+      updateSales();
+      alert('Transaction saved! Change: ₱'+(cash-total));
+    }
+
+    function printReceipt(){
+      if(!lastTransaction){alert('No transaction to print!');return}
+      let t = lastTransaction;
+      let itemsHtml = t.items.map(i=>`
+        <tr><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">₱${i.price}</td><td style="text-align:right">₱${i.price*i.qty}</td></tr>
+      `).join('');
+      
+      document.getElementById('receiptPrint').innerHTML = `
+        <div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px">
+          <h2 style="margin:0">ONE SIOMAI</h2>
+          <p style="margin:5px 0">POS Receipt</p>
+          <p style="margin:0;font-size:10px">${t.date}</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+          <tr style="border-bottom:1px solid #000"><th style="text-align:left">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+          ${itemsHtml}
+        </table>
+        <div style="border-top:2px dashed #000;padding-top:10px">
+          <div style="display:flex;justify-content:space-between;font-size:14px"><span>SUBTOTAL:</span><span>₱${t.total}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>CASH:</span><span>₱${t.cash}</span></div>
+          <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:16px"><span>CHANGE:</span><span>₱${t.change}</span></div>
+        </div>
+        <div style="text-align:center;margin-top:15px;border-top:2px dashed #000;padding-top:10px">
+          <p style="margin:0">Thank you!</p>
+          <p style="margin:5px 0;font-size:10px">Please come again</p>
+        </div>
+      `;
+      
+      document.getElementById('receiptPrint').classList.remove('hidden');
+      window.print();
+      setTimeout(()=>document.getElementById('receiptPrint').classList.add('hidden'),100);
+    }
+
+    function updateSales(){
+      let total = sales.reduce((sum,t)=>sum+t.total,0);
+      let items = sales.reduce((sum,t)=>sum+t.items.reduce((s,i)=>s+i.qty,0),0);
+      document.getElementById('totalSales').textContent = total;
+      document.getElementById('itemsSold').textContent = items + ' pcs';
+      document.getElementById('totalTrans').textContent = sales.length;
+      
+      document.getElementById('transList').innerHTML = sales.slice(-10).reverse().map(t=>`
+        <div style="background:#f9f9f9;padding:10px;margin:5px 0;border-radius:6px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;font-weight:bold">
+            <span>${t.date}</span><span>₱${t.total}</span>
+          </div>
+          <div style="color:#666;margin-top:5px">${t.items.map(i=>i.name+' x'+i.qty).join(', ')}</div>
+        </div>
+      `).join('');
+    }
+
+    function restoreAll(){
+      products.forEach(p=>p.stock=100);
+      saveData();
+      renderProducts();
+      renderStock();
+      alert('All stocks restored to 100!');
+    }
+
+    function deleteZeroStock(){
+      if(confirm('Delete all products with 0 stock?')){
+        products = products.filter(p=>p.stock>0);
+        saveData();
+        renderProducts();
+        renderStock();
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
