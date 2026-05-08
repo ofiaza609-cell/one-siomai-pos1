@@ -9,31 +9,29 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial; }
 body { background: #f5f5f5; padding-bottom: 20px; padding-top: 60px; }
 .header { background: #FF6B35; color: white; padding: 12px; text-align: center; font-size: 18px; font-weight: bold; position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
-.summary { background: #FF8C42; color: white; margin: 8px; padding: 12px; border-radius: 8px; position: relative; z-index: 1; }
+.summary { background: #FF8C42; color: white; margin: 8px; padding: 12px; border-radius: 8px; }
 .summary-row { display: flex; justify-content: space-between; margin: 3px 0; font-size: 14px; }
 .summary-net { font-size: 16px; font-weight: bold; border-top: 1px solid white; padding-top: 4px; margin-top: 4px; }
-.btn-small { background: white; color: #FF6B35; border: none; padding: 6px 10px; border-radius: 5px; margin: 2px; cursor: pointer; position: relative; z-index: 2; font-size: 12px; }
-.card { background: white; margin: 8px; padding: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; z-index: 1; }
+.btn-small { background: white; color: #FF6B35; border: none; padding: 6px 10px; border-radius: 5px; margin: 2px; cursor: pointer; font-size: 12px; }
+.card { background: white; margin: 8px; padding: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .card h3 { font-size: 16px; margin-bottom: 8px; }
-.btn { background: #FF6B35; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; position: relative; z-index: 2; font-size: 14px; }
+.btn { background: #FF6B35; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px; }
 .btn:active { background: #E55A2B; }
 .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.6; }
-.btn-print { background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 8px; font-size: 15px; font-weight: bold; }
 .btn-production { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 9px; width: 48%; margin-top: 3px; }
 .btn-price { background: #FF9800; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 9px; width: 48%; margin-top: 3px; margin-left: 4%; }
-input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; position: relative; z-index: 2; font-size: 14px; }
+input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin: 3px; font-size: 14px; }
 .category-tabs { display: flex; gap: 4px; margin-bottom: 8px; overflow-x: auto; padding-bottom: 4px; }
-.cat-btn { background: #eee; border: none; padding: 6px 12px; border-radius: 15px; white-space: nowrap; cursor: pointer; position: relative; z-index: 2; font-size: 12px; }
+.cat-btn { background: #eee; border: none; padding: 6px 12px; border-radius: 15px; white-space: nowrap; cursor: pointer!important; font-size: 12px; }
 .cat-btn.active { background: #FF6B35; color: white; }
 .product-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-.product-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; text-align: center; position: relative; }
+.product-item { border: 1px solid #ddd; padding: 6px; border-radius: 6px; text-align: center; }
 .product-item h4 { font-size: 11px; margin-bottom: 2px; font-weight: 600; }
 .product-item.price { font-size: 14px; font-weight: bold; color: #FF6B35; margin: 2px 0; }
-.stock-badge { display: none; }
 .cart-item { display: flex; justify-content: space-between; margin: 4px 0; align-items: center; font-size: 14px; }
 .checkout-btn { width: 100%; margin-top: 8px; padding: 12px; font-size: 15px; }
 .cat-header { background: #FF6B35; color: white; padding: 4px 8px; margin: 8px 0 4px 0; border-radius: 4px; font-size: 12px; font-weight: bold; grid-column: 1 / -1; }
-.qty-control { display: flex; gap: 3px; align-items: center; margin-top: 4px; position: relative; }
+.qty-control { display: flex; gap: 3px; align-items: center; margin-top: 4px; }
 .qty-input { width: 35px; padding: 4px; text-align: center; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; font-weight: bold; background: white; color: #333; }
 .btn-add-small { flex: 1; background: #FF6B35; color: white; border: none; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 11px; }
 .btn-add-small:disabled { background: #ccc; }
@@ -45,7 +43,6 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 .stock-input { width: 100%; padding: 3px; text-align: center; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; margin-bottom: 3px; }
 .price-input { width: 100%; padding: 3px; text-align: center; border: 1px solid #FF9800; border-radius: 3px; font-size: 10px; margin-bottom: 3px; background: white; }
 .btn-group { display: flex; }
-.hidden { display: none; }
 .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; }
 .modal-content { background: white; margin: 50px auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; }
 .modal h3 { margin-bottom: 15px; }
@@ -144,8 +141,7 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 </div>
 
 <script>
-// FORCE DEFAULT PRODUCTS - PAG WALANG LAMAN, IBALIK
-var products = [
+var defaultProducts = [
   {id:1,name:'Pork 65\'s',price:160,stock:602,cat:'65\'s'},
   {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
   {id:3,name:'Beff 65',price:150,stock:100,cat:'65\'s'},
@@ -165,6 +161,7 @@ var products = [
   {id:32,name:'mini ASADO',price:200,stock:100,cat:'EXTRAS'}
 ];
 
+var products = [];
 var cart = [];
 var salesData = [];
 var expensesData = [];
@@ -173,20 +170,20 @@ var currentStockFilter = 'All';
 var lastTransaction = null;
 
 function initApp(){
-  // LOAD SAVED DATA
   var savedProducts = localStorage.getItem('products');
   var savedSales = localStorage.getItem('sales');
   var savedExpenses = localStorage.getItem('expenses');
 
-  // KUNG MAY SAVED AT MAY LAMAN, GAMITIN. KUNG WALA, DEFAULT NA
   if(savedProducts && JSON.parse(savedProducts).length > 0) {
     products = JSON.parse(savedProducts);
+  } else {
+    products = defaultProducts.slice();
+    saveData();
   }
 
   if(savedSales) salesData = JSON.parse(savedSales);
   if(savedExpenses) expensesData = JSON.parse(savedExpenses);
 
-  saveData(); // SAVE ULIT PARA SURE
   renderProducts();
   renderProduction();
   updateSummary();
@@ -276,7 +273,7 @@ function renderCart(){
     var item = cart[i];
     html += '<div class="cart-item">';
     html += '<span>'+item.name+' x'+item.qty+'</span>';
-    html += '<span>₱'+(item.price*item.qty)+' <button onclick="removeFromCart('+item.id+')" style="background:red;color:white;border:none;padding:2px 5px;border-radius:3px;margin-left:5px">X</button></span>';
+    html += '<span>₱'+(item.price*item.qty)+' <button onclick="removeFromCart('+item.id+')" style="background:red;color:white;border:none;padding:2px 5px;border-radius:3px;margin-left:5px;cursor:pointer">X</button></span>';
     html += '</div>';
   }
   document.getElementById('cartList').innerHTML = html;
@@ -382,4 +379,138 @@ function renderProduction(){
     html += '<div class="stock-item">';
     html += '<div class="stock-item-name">'+p.name+'</div>';
     html += '<div class="stock-item-price">₱'+p.price+'</div>';
-    html += '<div class="stock-item-q
+    html += '<div class="stock-item-qty">Stock: '+p.stock+'</div>';
+    html += '<input type="number" class="stock-input" id="prod-'+p.id+'" placeholder="+Stock" min="1">';
+    html += '<input type="number" class="price-input" id="price-'+p.id+'" value="'+p.price+'" min="0">';
+    html += '<div class="btn-group">';
+    html += '<button class="btn-production" onclick="addProduction('+p.id+')">+Stock</button>';
+    html += '<button class="btn-price" onclick="updatePrice('+p.id+')">₱Price</button>';
+    html += '</div></div>';
+  }
+  document.getElementById('productionList').innerHTML = html;
+}
+
+function addProduction(id){
+  var input = document.getElementById('prod-'+id);
+  var addQty = parseInt(input.value)||0;
+  if(addQty<=0){alert('Enter valid quantity!');return}
+  for(var i=0;i<products.length;i++){
+    if(products[i].id===id){
+      products[i].stock += addQty;
+      break;
+    }
+  }
+  saveData();
+  renderProducts();
+  renderProduction();
+  input.value = '';
+}
+
+function updatePrice(id){
+  var input = document.getElementById('price-'+id);
+  var newPrice = parseFloat(input.value);
+  if(isNaN(newPrice) || newPrice<0){alert('Enter valid price!');return}
+  for(var i=0;i<products.length;i++){
+    if(products[i].id===id){
+      products[i].price = newPrice;
+      break;
+    }
+  }
+  saveData();
+  renderProducts();
+  renderProduction();
+  alert('Price updated to ₱'+newPrice);
+}
+
+function showAddProductModal(){
+  document.getElementById('addProductModal').style.display = 'block';
+}
+
+function closeAddProductModal(){
+  document.getElementById('addProductModal').style.display = 'none';
+  document.getElementById('newProductName').value = '';
+  document.getElementById('newProductPrice').value = '';
+  document.getElementById('newProductStock').value = '';
+}
+
+function addNewProduct(){
+  var name = document.getElementById('newProductName').value.trim();
+  var cat = document.getElementById('newProductCat').value;
+  var price = parseFloat(document.getElementById('newProductPrice').value);
+  var stock = parseInt(document.getElementById('newProductStock').value);
+
+  if(!name || isNaN(price) || isNaN(stock)){
+    alert('Fill all fields!');
+    return;
+  }
+
+  products.push({
+    id:Date.now(),
+    name:name,
+    price:price,
+    stock:stock,
+    cat:cat
+  });
+
+  saveData();
+  renderProducts();
+  renderProduction();
+  closeAddProductModal();
+  alert('Product added to '+cat+'!');
+}
+
+function addExpense(){
+  var item = document.getElementById('expenseItem').value.trim();
+  var amt = parseFloat(document.getElementById('expenseAmt').value)||0;
+  if(!item || amt<=0){alert('Enter valid item and amount!');return}
+  expensesData.push({id:Date.now(),item:item,amount:amt,date:new Date().toLocaleString()});
+  saveData();
+  updateSummary();
+  document.getElementById('expenseItem').value='';
+  document.getElementById('expenseAmt').value='';
+  alert('Expense added!');
+}
+
+function updateSummary(){
+  var totalSales = 0;
+  for(var i=0;i<salesData.length;i++) totalSales += salesData[i].total;
+  var totalExp = 0;
+  for(var i=0;i<expensesData.length;i++) totalExp += expensesData[i].amount;
+  var items = 0;
+  for(var i=0;i<salesData.length;i++){
+    for(var j=0;j<salesData[i].items.length;j++) items += salesData[i].items[j].qty;
+  }
+  document.getElementById('sales').textContent = totalSales.toFixed(2);
+  document.getElementById('expenses').textContent = totalExp.toFixed(2);
+  document.getElementById('net').textContent = (totalSales - totalExp).toFixed(2);
+  document.getElementById('itemsSold').textContent = items;
+  document.getElementById('transCount').textContent = salesData.length;
+}
+
+function resetDay(){
+  if(confirm('Reset all data for new day?')){
+    salesData = [];
+    expensesData = [];
+    cart = [];
+    saveData();
+    renderCart();
+    updateSummary();
+  }
+}
+
+function resetAllData(){
+  if(confirm('🔄 RESET ALL: Delete all products and data? This will clear localStorage!')){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+function printReport(){
+  alert('Printing report...');
+  window.print();
+}
+
+initApp();
+</script>
+</body>
+</html>
