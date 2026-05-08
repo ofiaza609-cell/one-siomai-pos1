@@ -144,7 +144,7 @@ input, select { padding: 6px; border: 1px solid #ddd; border-radius: 5px; margin
 </div>
 
 <script>
-var products = [
+var defaultProducts = [
   {id:1,name:'Pork 65\'s',price:160,stock:602,cat:'65\'s'},
   {id:2,name:'Chicken 65\'s',price:150,stock:100,cat:'65\'s'},
   {id:3,name:'Beff 65',price:150,stock:100,cat:'65\'s'},
@@ -164,6 +164,7 @@ var products = [
   {id:32,name:'mini ASADO',price:200,stock:100,cat:'EXTRAS'}
 ];
 
+var products = [];
 var cart = [];
 var salesData = [];
 var expensesData = [];
@@ -171,13 +172,22 @@ var currentFilter = 'All';
 var currentStockFilter = 'All';
 var lastTransaction = null;
 
+// FIX: AUTO RESTORE PAG WALANG LAMAN
 function initApp(){
   var savedProducts = localStorage.getItem('products');
   var savedSales = localStorage.getItem('sales');
   var savedExpenses = localStorage.getItem('expenses');
-  if(savedProducts) products = JSON.parse(savedProducts);
+
+  if(savedProducts && JSON.parse(savedProducts).length > 0) {
+    products = JSON.parse(savedProducts);
+  } else {
+    products = defaultProducts.slice(); // RESTORE DEFAULTS
+    saveData();
+  }
+
   if(savedSales) salesData = JSON.parse(savedSales);
   if(savedExpenses) expensesData = JSON.parse(savedExpenses);
+
   renderProducts();
   renderProduction();
   updateSummary();
@@ -189,7 +199,6 @@ function saveData(){
   localStorage.setItem('expenses',JSON.stringify(expensesData));
 }
 
-// FIX #1: PRODUCTS TABS - MAY SPACE NA SA SELECTOR
 function filterCategory(cat,el){
   currentFilter = cat;
   var tabs = document.querySelectorAll('#categoryTabs.cat-btn');
@@ -198,7 +207,6 @@ function filterCategory(cat,el){
   renderProducts();
 }
 
-// FIX #2: STOCK TABS - MAY SPACE NA RIN
 function filterStockCategory(cat,el){
   currentStockFilter = cat;
   var tabs = document.querySelectorAll('#stockCategoryTabs.cat-btn');
@@ -380,4 +388,133 @@ function renderProduction(){
     html += '<input type="number" class="price-input" id="price-'+p.id+'" value="'+p.price+'" min="0">';
     html += '<div class="btn-group">';
     html += '<button class="btn-production" onclick="addProduction('+p.id+')">+Stock</button>';
-    html += '<button class="btn-price" onclick="updatePrice('+p.id+')">₱Price
+    html += '<button class="btn-price" onclick="updatePrice('+p.id+')">₱Price</button>';
+    html += '</div></div>';
+  }
+  document.getElementById('productionList').innerHTML = html;
+}
+
+function addProduction(id){
+  var input = document.getElementById('prod-'+id);
+  var addQty = parseInt(input.value)||0;
+  if(addQty<=0){alert('Enter valid quantity!');return}
+  for(var i=0;i<products.length;i++){
+    if(products[i].id===id){
+      products[i].stock += addQty;
+      break;
+    }
+  }
+  saveData();
+  renderProducts();
+  renderProduction();
+  input.value = '';
+}
+
+function updatePrice(id){
+  var input = document.getElementById('price-'+id);
+  var newPrice = parseFloat(input.value);
+  if(isNaN(newPrice) || newPrice<0){alert('Enter valid price!');return}
+  for(var i=0;i<products.length;i++){
+    if(products[i].id===id){
+      products[i].price = newPrice;
+      break;
+    }
+  }
+  saveData();
+  renderProducts();
+  renderProduction();
+  alert('Price updated to ₱'+newPrice);
+}
+
+function showAddProductModal(){
+  document.getElementById('addProductModal').style.display = 'block';
+}
+
+function closeAddProductModal(){
+  document.getElementById('addProductModal').style.display = 'none';
+  document.getElementById('newProductName').value = '';
+  document.getElementById('newProductPrice').value = '';
+  document.getElementById('newProductStock').value = '';
+}
+
+function addNewProduct(){
+  var name = document.getElementById('newProductName').value.trim();
+  var cat = document.getElementById('newProductCat').value;
+  var price = parseFloat(document.getElementById('newProductPrice').value);
+  var stock = parseInt(document.getElementById('newProductStock').value);
+
+  if(!name || isNaN(price) || isNaN(stock)){
+    alert('Fill all fields!');
+    return;
+  }
+
+  products.push({
+    id:Date.now(),
+    name:name,
+    price:price,
+    stock:stock,
+    cat:cat
+  });
+
+  saveData();
+  renderProducts();
+  renderProduction();
+  closeAddProductModal();
+  alert('Product added to '+cat+'!');
+}
+
+function addExpense(){
+  var item = document.getElementById('expenseItem').value.trim();
+  var amt = parseFloat(document.getElementById('expenseAmt').value)||0;
+  if(!item || amt<=0){alert('Enter valid item and amount!');return}
+  expensesData.push({id:Date.now(),item:item,amount:amt,date:new Date().toLocaleString()});
+  saveData();
+  updateSummary();
+  document.getElementById('expenseItem').value='';
+  document.getElementById('expenseAmt').value='';
+  alert('Expense added!');
+}
+
+function updateSummary(){
+  var totalSales = 0;
+  for(var i=0;i<salesData.length;i++) totalSales += salesData[i].total;
+  var totalExp = 0;
+  for(var i=0;i<expensesData.length;i++) totalExp += expensesData[i].amount;
+  var items = 0;
+  for(var i=0;i<salesData.length;i++){
+    for(var j=0;j<salesData[i].items.length;j++) items += salesData[i].items[j].qty;
+  }
+  document.getElementById('sales').textContent = totalSales.toFixed(2);
+  document.getElementById('expenses').textContent = totalExp.toFixed(2);
+  document.getElementById('net').textContent = (totalSales - totalExp).toFixed(2);
+  document.getElementById('itemsSold').textContent = items;
+  document.getElementById('transCount').textContent = salesData.length;
+}
+
+function resetDay(){
+  if(confirm('Reset all data for new day?')){
+    salesData = [];
+    expensesData = [];
+    cart = [];
+    saveData();
+    renderCart();
+    updateSummary();
+  }
+}
+
+function resetAllData(){
+  if(confirm('🔄 RESET ALL: Delete all products and data? This will clear localStorage!')){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+function printReport(){
+  alert('Printing report...');
+  window.print();
+}
+
+initApp();
+</script>
+</body>
+</html>
